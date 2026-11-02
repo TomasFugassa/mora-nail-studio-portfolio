@@ -1,0 +1,26 @@
+{
+  "tool": "Built-in image generation",
+  "purpose": "Original conceptual imagery for the fictional Mora demonstration; not actual client work",
+  "assets": [
+    {
+      "name": "cherry",
+      "prompt": "Use case: photorealistic-natural. Asset type: portrait editorial nail-art photograph for a fictional nail studio website demonstration, not a real client portfolio. Create one original photographic image, vertical 4:5 composition. Close-up of a single adult feminine hand with anatomically correct natural fingers and elegant medium almond nails. Hand fills the frame in a relaxed graceful diagonal pose, all nail tips comfortably inside the image, real skin texture, high-end beauty editorial photography, coherent softbox lighting, crisp manicure details, understated rich shadows. No text, no logo, no watermark, no collage, no tools or extra hands. Glossy deep cherry red nails, one accent nail has a subtle ivory curved line. Warm ivory fabric background with soft directional shadow. Rich wine-red and warm neutral color story. Polished fashion magazine art direction.",
+      "file": "src/assets/mora-cherry.png"
+    },
+    {
+      "name": "pearl",
+      "prompt": "Use case: photorealistic-natural. Asset type: portrait editorial nail-art photograph for a fictional nail studio website demonstration, not a real client portfolio. Create one original photographic image, vertical 4:5 composition. Close-up of a single adult feminine hand with anatomically correct natural fingers and elegant medium almond nails. Hand fills the frame in a relaxed graceful diagonal pose, all nail tips comfortably inside the image, real skin texture, high-end beauty editorial photography, coherent softbox lighting, crisp manicure details, understated rich shadows. No text, no logo, no watermark, no collage, no tools or extra hands. Sheer blush pink nails, a delicate pearl-chrome sheen, one nail has a fine white French tip. Pale rose backdrop, translucent pale pink fabric at lower corner, soft daylight. Refined, minimal, realistic.",
+      "file": "src/assets/mora-pearl.png"
+    },
+    {
+      "name": "blue",
+      "prompt": "Use case: photorealistic-natural. Asset type: portrait editorial nail-art photograph for a fictional nail studio website demonstration, not a real client portfolio. Create one original photographic image, vertical 4:5 composition. Close-up of a single adult feminine hand with anatomically correct natural fingers and elegant medium almond nails. Hand fills the frame in a relaxed graceful diagonal pose, all nail tips comfortably inside the image, real skin texture, high-end beauty editorial photography, coherent softbox lighting, crisp manicure details, understated rich shadows. No text, no logo, no watermark, no collage, no tools or extra hands. Glossy powder-blue nails with a restrained silver chrome curved accent on one nail. Cool blue-grey matte background. Darker skin tone. Sophisticated contemporary beauty campaign.",
+      "file": "src/assets/mora-blue.png"
+    },
+    {
+      "name": "olive",
+      "prompt": "Use case: photorealistic-natural. Asset type: portrait editorial nail-art photograph for a fictional nail studio website demonstration, not a real client portfolio. Create one original photographic image, vertical 4:5 composition. Close-up of a single adult feminine hand with anatomically correct natural fingers and elegant medium almond nails. Hand fills the frame in a relaxed graceful diagonal pose, all nail tips comfortably inside the image, real skin texture, high-end beauty editorial photography, coherent softbox lighting, crisp manicure details, understated rich shadows. No text, no logo, no watermark, no collage, no tools or extra hands. Deep olive green glossy nails, one accent nail with a thin gold arc. Warm sand-colored background, subtle linen, warm side light. Natural medium brown skin. Strong editorial beauty composition.",
+      "file": "src/assets/mora-olive.png"
+    }
+  ]
+}

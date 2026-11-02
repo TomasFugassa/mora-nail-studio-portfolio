@@ -1,0 +1,28 @@
+---
+import {demo} from '../server/store.mjs';
+interface Props { backdrop?: string }
+const {backdrop}=Astro.props;
+---
+<section class="booking-section section" id="reservas" aria-labelledby="booking-title">
+  {backdrop&&<div class="booking-backdrop" aria-hidden="true"><img src={backdrop} alt="" width="1024" height="1280" loading="lazy"/></div>}
+  <div class="booking-shell">
+    <div class="booking-intro"><p class="eyebrow">LA AGENDA</p><h2 id="booking-title">Tu próximo<br/><em>turno, acá</em></h2><p>Elegí un servicio, buscá un día y encontrá el horario que te quede mejor.</p><div class="booking-steps"><span>Servicio</span><span>Fecha y hora</span><span>Confirmación</span></div></div>
+    <div class="booking-card">
+      {demo&&<p class="demo-notice">Agenda de demostración · Podés probar sin generar una cita real.</p>}
+      <form id="booking-form">
+        <div class="booking-field"><label for="booking-service">¿Qué te gustaría hacerte?</label><select id="booking-service" required><option value="">Cargando servicios…</option></select></div>
+        <div class="booking-field"><label for="booking-date">Elegí un día</label><select id="booking-date" required><option value="">Elegí primero un servicio</option></select></div>
+        <fieldset class="slot-field"><legend>Elegí la hora de inicio</legend><p id="booking-rules" class="booking-rules"></p><div id="booking-slots" class="booking-slots"><p>Los horarios aparecen al elegir un día.</p></div></fieldset>
+        <p id="booking-selection" class="booking-selection" role="status" hidden></p>
+        <div class="booking-person"><div><label for="booking-name">Tu nombre</label><input id="booking-name" autocomplete="name" required minlength="2" maxlength="100"/></div><div><label for="booking-phone">Tu celular / WhatsApp</label><input id="booking-phone" type="tel" autocomplete="tel" required maxlength="25" placeholder="Ej.: 099 123 456"/></div></div>
+        <p id="booking-reference" hidden></p>
+        <button type="submit" class="button button-dark" id="booking-submit" disabled>Confirmar mi turno</button>
+        <p class="booking-note">El horario se confirma al completar la reserva. Tus datos se usan para gestionar el turno y quedan visibles solo para el estudio.</p>
+      </form>
+      <div id="booking-result" hidden><p class="eyebrow" id="booking-result-label">Turno confirmado</p><h3>Ya tenés tu<br/><em>momento Mora</em></h3><p id="booking-summary"></p><p>Guardá tu enlace privado para consultar o cancelar el turno:</p><a id="booking-private-link" class="text-link">Ver mi turno</a><a id="booking-whatsapp" class="button button-dark" target="_blank" rel="noopener noreferrer">Conversar por WhatsApp</a><button id="booking-another" class="text-link" type="button">Volver a la agenda</button></div>
+      <p id="booking-status" role="status" aria-live="polite"></p>
+    </div>
+    <a class="booking-help" href="#contacto">¿Preferís consultar antes? Hablemos por WhatsApp</a>
+  </div>
+</section>
+<script src="../scripts/booking.ts"></script>

@@ -1,0 +1,22 @@
+{
+  "id": "/admin",
+  "name": "Mi Mora · Tu estudio",
+  "short_name": "Mi Mora",
+  "description": "Tu agenda, tu colección y tu estudio, siempre a mano.",
+  "lang": "es-UY",
+  "start_url": "/admin?source=pwa",
+  "scope": "/admin",
+  "display": "standalone",
+  "background_color": "#f7f2e9",
+  "theme_color": "#352127",
+  "icons": [
+    { "src": "/pwa/mora-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa/mora-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    {
+      "src": "/pwa/mora-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "heroId": "cherry",
+  "secondaryId": "pearl",
+  "photos": [
+    {
+      "id": "cherry",
+      "title": "Cherry",
+      "category": "color",
+      "alt": "Manicura almendrada en rojo cereza, con una línea curva marfil sobre fondo cálido. Imagen conceptual generada para la demostración.",
+      "image": "/src/assets/mora-cherry.png"
+    },
+    {
+      "id": "pearl",
+      "title": "Pearl",
+      "category": "sutil",
+      "alt": "Manicura rosa translúcida con brillo perlado y un detalle francés blanco. Imagen conceptual generada para la demostración.",
+      "image": "/src/assets/mora-pearl.png"
+    },
+    {
+      "id": "blue",
+      "title": "Blue",
+      "category": "arte",
+      "alt": "Manicura azul empolvado con un acento cromado plateado sobre piel morena. Imagen conceptual generada para la demostración.",
+      "image": "/src/assets/mora-blue.png"
+    },
+    {
+      "id": "olive",
+      "title": "Olive",
+      "category": "color",
+      "alt": "Manicura verde oliva con un delicado arco dorado sobre un fondo de lino. Imagen conceptual generada para la demostración.",
+      "image": "/src/assets/mora-olive.png"
+    },
+    {
+      "id": "bloom",
+      "title": "Bloom",
+      "category": "arte",
+      "alt": "Manicura rosa translúcida con pequeñas flores rojas sobre seda rosa junto a una flor. Imagen generada para la muestra.",
+      "image": "/src/assets/mora-bloom.png"
+    },
+    {
+      "id": "ink",
+      "title": "Ink",
+      "category": "sutil",
+      "alt": "Manicura nude con finas puntas francesas negras sobre una mano apoyada en travertino. Imagen generada para la muestra.",
+      "image": "/src/assets/mora-ink.png"
+    },
+    {
+      "id": "apricot",
+      "title": "Apricot",
+      "category": "color",
+      "alt": "Uñas cortas de forma cuadrada suave en tonos durazno y un delicado acento marfil. Imagen generada para la muestra.",
+      "image": "/src/assets/mora-apricot.png"
+    }
+  ]
+}

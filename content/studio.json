@@ -1,0 +1,41 @@
+{
+  "name": "Mora Nail Studio",
+  "instagram": "https://www.instagram.com/",
+  "facebook": "https://www.facebook.com/",
+  "whatsappProfile": "https://example.com",
+  "whatsappPhone": "59800000000",
+  "email": "",
+  "location": "Estudio conceptual",
+  "intro": "Una propuesta de estudio donde podés explorar diseños, elegir una técnica y reservar tu próxima visita. Esta marca y sus imágenes forman parte de una demostración de software.",
+  "services": [
+    {
+      "number": "01",
+      "title": "Esmaltado & estructura",
+      "tags": [
+        "Semipermanente",
+        "Kapping",
+        "Builder",
+        "SoftGel"
+      ],
+      "description": "Elegí entre esmaltado semipermanente y técnicas de estructura. Cada servicio tiene su duración configurada en la agenda."
+    },
+    {
+      "number": "02",
+      "title": "Diseño & nail art",
+      "tags": [
+        "Nail art",
+        "Decoraciones"
+      ],
+      "description": "Líneas, efectos cromados, color y detalles personalizados. Sumá una imagen de referencia de la colección a tu consulta."
+    },
+    {
+      "number": "03",
+      "title": "Cuidado & renovación",
+      "tags": [
+        "Reconstrucción de uñas",
+        "Estética de pies"
+      ],
+      "description": "Opciones de cuidado y renovación de la manicura. Consultá qué técnica se adapta a lo que estás buscando."
+    }
+  ]
+}
