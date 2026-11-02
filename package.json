@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node --env-file-if-exists=.env node_modules/astro/bin/astro.mjs dev --host 127.0.0.1 --port 4324",
+    "dev:lan": "node --env-file-if-exists=.env scripts/dev-lan.mjs",
     "build": "astro build",
     "preview": "astro preview --host 127.0.0.1 --port 4324",
     "check": "astro check",

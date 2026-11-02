@@ -1,6 +1,7 @@
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import type { PolishViewer } from './polish-viewer';
+import { motionPreference as motion } from './motion-preference';
 gsap.registerPlugin(ScrollTrigger);
 export {};
 
@@ -32,7 +33,7 @@ filters.forEach((filter) =>
       card.hidden = category !== 'all' && card.dataset.category !== category;
     });
     if (count) count.textContent = String(cards.filter((card) => !card.hidden).length);
-    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (!motion.matches) {
       cards
         .filter((card) => !card.hidden)
         .forEach((card, index) => {
@@ -74,7 +75,7 @@ function displayPhoto(button: HTMLButtonElement) {
     dialogImage.src = button.dataset.photoSrc ?? '';
     dialogImage.alt = button.dataset.photoAlt ?? '';
   }
-  if (dialogImage && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  if (dialogImage && !motion.matches) {
     dialogImage
       .decode()
       .then(() => {
@@ -156,7 +157,7 @@ document.getElementById('use-reference')?.addEventListener('click', () => {
   nextFocus = serviceSelect;
   closeDialog();
   contact?.scrollIntoView({
-    behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+    behavior: motion.matches ? 'instant' : 'smooth',
     block: 'start',
   });
   serviceSelect?.focus({ preventScroll: true });
@@ -212,11 +213,12 @@ document.getElementById('inquiry-form')?.addEventListener('submit', (event) => {
     );
   if (idea) lines.push(`Mi idea: ${idea}`);
   lines.push('¿Me contás disponibilidad, precio y ubicación actual?');
-  void lines; // La demostración no envía consultas.
+  const url = `https://wa.me/${document.querySelector<HTMLFormElement>('#inquiry-form')?.dataset.phone || '59895983487'}?text=${encodeURIComponent(lines.join('\n'))}`;
+  window.open(url, '_blank', 'noopener,noreferrer');
   const status = document.getElementById('form-status');
   if (status)
     status.textContent =
-      'Demostración: la consulta no se envía y no se reserva ningún turno.';
+      'Consulta preparada. Completá la conversación en WhatsApp; todavía no se reservó ningún turno.';
 });
 
 const menuToggle = document.querySelector<HTMLButtonElement>('.menu-toggle');
@@ -242,7 +244,6 @@ matchMedia('(min-width: 761px)').addEventListener('change', (event) => {
   if (event.matches) setMenu(false);
 });
 
-const motion = matchMedia('(prefers-reduced-motion: reduce)');
 type Slide = {id:string;number:string;title:string;alt:string;src:string;label:string;tone:string;copyIndex:number};
 type HeroCopy = {lines:string[];description:string};
 const heroCopies:HeroCopy[]=JSON.parse(document.getElementById('hero-copies')?.textContent||'[]');
@@ -266,6 +267,14 @@ function fitHeadline(){
     heroDescription.parentElement?.append(measure);
     let height=0;heroCopies.forEach(copy=>{measure.textContent=copy.description;height=Math.max(height,measure.getBoundingClientRect().height);});
     measure.remove();heroDescription.style.minHeight=Math.ceil(height)+'px';
+  }
+  const cover=document.querySelector<HTMLElement>('.hero');
+  const copy=document.querySelector<HTMLElement>('.hero-copy');
+  if(cover&&copy){
+    const wasTall=cover.classList.contains('is-tall');
+    cover.classList.remove('is-tall');
+    if(innerWidth>760&&copy.scrollHeight>copy.clientHeight+2)cover.classList.add('is-tall');
+    if(wasTall!==cover.classList.contains('is-tall'))requestAnimationFrame(()=>ScrollTrigger.refresh());
   }
 }
 const slides:Slide[] = JSON.parse(document.getElementById('hero-slides')?.textContent || '[]');
@@ -362,67 +371,90 @@ document.addEventListener('visibilitychange',playLater);
 motion.addEventListener('change',playLater);
 playLater();
 
-// Native horizontal scrolling remains available for touch, keyboard and reduced motion.
+// The collection has its own horizontal rail; vertical scrolling belongs to the page.
 const galleryWindow=document.querySelector<HTMLElement>('.gallery-window');
 const gallery=document.querySelector<HTMLElement>('.gallery');
-const collection=document.querySelector<HTMLElement>('.collection');
+const collectionBar=document.querySelector<HTMLElement>('.collection-scrollbar');
+const collectionSlider=document.querySelector<HTMLInputElement>('#collection-scroll');
 const media=gsap.matchMedia();
-let scrollContext:gsap.Context|undefined;
-function setUpCollection(){
-  scrollContext?.revert();
-  collection?.classList.remove('is-pinned');
-  if(!gallery || !galleryWindow || !collection)return;
-  galleryWindow.scrollLeft=0;
-  const distance=gallery.scrollWidth-galleryWindow.clientWidth;
-  if(motion.matches || innerWidth<1000 || innerHeight<800 || distance<60)return;
-  scrollContext=gsap.context(()=>{
-    collection.classList.add('is-pinned');
-    gsap.to(gallery,{x:()=>-Math.max(0,gallery.scrollWidth-galleryWindow.clientWidth),ease:'none',scrollTrigger:{id:'lookbook',trigger:galleryWindow,start:'top 35px',end:()=>'+='+Math.max(400,gallery.scrollWidth-galleryWindow.clientWidth),scrub:.65,pin:galleryWindow,invalidateOnRefresh:true}});
-  },collection);
+function syncCollectionBar(){
+  if(!galleryWindow||!collectionSlider||!collectionBar)return;
+  const distance=Math.max(0,galleryWindow.scrollWidth-galleryWindow.clientWidth);
+  const progress=distance>1?Math.min(100,Math.max(0,galleryWindow.scrollLeft/distance*100)):0;
+  collectionBar.hidden=distance<2;
+  galleryWindow.classList.toggle('has-scrollbar',distance>=2);
+  collectionSlider.value=String(progress);
+  collectionSlider.style.setProperty('--progress',progress+'%');
+  collectionSlider.setAttribute('aria-valuetext',Math.round(progress)+'% de la colección');
 }
-filters.forEach(button=>button.addEventListener('click',()=>{requestAnimationFrame(()=>{setUpCollection();ScrollTrigger.refresh();});}));
-let keyboardNavigation=false;
-document.addEventListener('keydown',event=>{keyboardNavigation=event.key==='Tab';});
-document.addEventListener('pointerdown',()=>{keyboardNavigation=false;});
-galleryWindow?.addEventListener('focusin',event=>{
-  if(!keyboardNavigation)return;
-  const target=event.target instanceof HTMLElement?event.target.closest<HTMLElement>('.gallery-item'):null;
-  const trigger=ScrollTrigger.getById('lookbook');
-  if(!target||!trigger||!gallery)return;
-  const distance=gallery.scrollWidth-galleryWindow.clientWidth;
-  if(distance>0){galleryWindow.scrollLeft=0;window.scrollTo({top:trigger.start+Math.min(1,target.offsetLeft/distance)*(trigger.end-trigger.start),behavior:'instant'});}
+collectionSlider?.addEventListener('input',()=>{
+  if(!galleryWindow)return;
+  galleryWindow.scrollTo({left:Number(collectionSlider.value)/100*(galleryWindow.scrollWidth-galleryWindow.clientWidth),behavior:'instant'});
+  syncCollectionBar();
 });
-media.add('(prefers-reduced-motion: no-preference)',()=>{
-  document.body.classList.add('motion-ready');
-  const revealTargets=gsap.utils.toArray<HTMLElement>('.section-heading > *, .palette-copy > *, .services-header > div, .service-list > details, .booking-intro > *, .booking-card, .contact-heading > *, .inquiry-form, .contact-photo-caption, .faq-heading > *, .faq-list article, .footer-top > *');
-  const distance=innerWidth<761?28:50;
-  revealTargets.forEach(element=>{element.dataset.scrollReveal='true';});
-  gsap.set(revealTargets,{opacity:0,y:distance});
-  ScrollTrigger.batch(revealTargets,{
-    start:'top 91%',once:true,batchMax:4,interval:.08,
-    onEnter:batch=>gsap.to(batch,{opacity:1,y:0,duration:1,stagger:.1,ease:'power3.out',overwrite:'auto',clearProps:'opacity,transform'}),
+galleryWindow?.addEventListener('scroll',syncCollectionBar,{passive:true});
+filters.forEach(button=>button.addEventListener('click',()=>{
+  galleryWindow?.scrollTo({left:0,behavior:'instant'});
+  requestAnimationFrame(()=>{syncCollectionBar();ScrollTrigger.refresh();});
+}));
+if(galleryWindow&&gallery){
+  const railResize=new ResizeObserver(syncCollectionBar);
+  railResize.observe(galleryWindow);railResize.observe(gallery);
+}
+syncCollectionBar();
+function setUpScrollMotion(){
+  media.revert();
+  if(motion.matches)return;
+  media.add('all',()=>{
+    document.body.classList.add('motion-ready');
+    const revealTargets=gsap.utils.toArray<HTMLElement>('.section-heading > *, .palette-art, .palette-copy > *, .services-header > div, .service-list > details, .service-editorial, .booking-intro > *, .booking-card, .contact-photo, .contact-heading > *, .inquiry-form, .contact-photo-caption, .location-section > *, .faq-heading > *, .faq-list article, .footer-top > *');
+    const distance=innerWidth<761?28:50;
+    const entrances=new Set<gsap.core.Tween>();
+    const pending=revealTargets.filter(element=>element.getBoundingClientRect().bottom>0);
+    revealTargets.forEach(element=>{element.dataset.scrollReveal='true';element.dataset.revealState='visible';});
+    pending.forEach(element=>{element.dataset.revealState='waiting';});
+    gsap.set(pending,{opacity:0,y:distance});
+    // Follow real intersections instead of cached positions affected by page reflow.
+    const entranceObserver=new IntersectionObserver(entries=>{
+      entries.filter(entry=>entry.isIntersecting).forEach((entry,index)=>{
+        const element=entry.target as HTMLElement;
+        entranceObserver.unobserve(element);element.dataset.revealState='entering';
+        const tween=gsap.to(element,{
+          opacity:1,y:0,duration:1.1,delay:Math.min(index,3)*.09,ease:'power3.out',
+          overwrite:'auto',clearProps:'opacity,transform',
+          onComplete:()=>{element.dataset.revealState='visible';entrances.delete(tween);},
+        });
+        entrances.add(tween);
+      });
+    },{rootMargin:'0px 0px -40px 0px',threshold:0});
+    pending.forEach(element=>entranceObserver.observe(element));
+    gsap.from('.hero h1>span',{yPercent:30,opacity:0,stagger:.08,duration:1.05,ease:'power3.out',clearProps:'transform,opacity'});
+    gsap.from('.hero-visual',{clipPath:'inset(0 0 100% 0)',duration:1.25,ease:'power3.inOut',clearProps:'clipPath'});
+    gsap.to('.polish-bottle',{y:-12,rotation:-9,duration:3.2,repeat:-1,yoyo:true,ease:'sine.inOut'});
+    gsap.fromTo('.polish-bottle',{rotationY:-9},{rotationY:9,ease:'none',scrollTrigger:{trigger:'.palette-section',start:'top bottom',end:'bottom top',scrub:1.2}});
+    gsap.fromTo('.shot-frame',{y:24,rotation:-3},{y:-18,rotation:3,ease:'none',scrollTrigger:{trigger:'.service-editorial',start:'top bottom',end:'bottom top',scrub:1}});
+    gsap.fromTo('.palette-atmosphere img',{yPercent:-5},{yPercent:5,ease:'none',scrollTrigger:{trigger:'.palette-section',start:'top bottom',end:'bottom top',scrub:1.1}});
+    gsap.fromTo('.booking-backdrop img',{yPercent:-5},{yPercent:5,ease:'none',scrollTrigger:{trigger:'.booking-section',start:'top bottom',end:'bottom top',scrub:1.2}});
+    gsap.fromTo('.contact-photo > img',{scale:1.12,yPercent:-4},{yPercent:4,ease:'none',scrollTrigger:{trigger:'.contact-photo',start:'top bottom',end:'bottom top',scrub:1.2}});
+    return ()=>{
+      entranceObserver.disconnect();entrances.forEach(tween=>tween.kill());
+      gsap.set(revealTargets,{clearProps:'opacity,transform'});
+      document.body.classList.remove('motion-ready');
+      revealTargets.forEach(element=>{delete element.dataset.scrollReveal;delete element.dataset.revealState;});
+    };
   });
-  gsap.from('.hero h1>span',{yPercent:30,opacity:0,stagger:.08,duration:1.05,ease:'power3.out',clearProps:'transform,opacity'});
-  gsap.from('.hero-visual',{clipPath:'inset(0 0 100% 0)',duration:1.25,ease:'power3.inOut',clearProps:'clipPath'});
-  gsap.to('.polish-bottle',{y:-12,rotation:-9,duration:3.2,repeat:-1,yoyo:true,ease:'sine.inOut'});
-  gsap.fromTo('.polish-bottle',{rotationY:-9},{rotationY:9,ease:'none',scrollTrigger:{trigger:'.palette-section',start:'top bottom',end:'bottom top',scrub:1.2}});
-  gsap.fromTo('.shot-frame',{y:24,rotation:-3},{y:-18,rotation:3,ease:'none',scrollTrigger:{trigger:'.service-editorial',start:'top bottom',end:'bottom top',scrub:1}});
-  gsap.fromTo('.palette-atmosphere img',{yPercent:-5},{yPercent:5,ease:'none',scrollTrigger:{trigger:'.palette-section',start:'top bottom',end:'bottom top',scrub:1.1}});
-  gsap.fromTo('.booking-backdrop img',{yPercent:-5},{yPercent:5,ease:'none',scrollTrigger:{trigger:'.booking-section',start:'top bottom',end:'bottom top',scrub:1.2}});
-  gsap.fromTo('.contact-photo > img',{scale:1.12,yPercent:-4},{yPercent:4,ease:'none',scrollTrigger:{trigger:'.contact-photo',start:'top bottom',end:'bottom top',scrub:1.2}});
-  gsap.fromTo('.contact-photo',{clipPath:'inset(5% 5% 5% 5% round 18px)'},{clipPath:'inset(0% 0% 0% 0% round 0px)',duration:1.25,ease:'power3.out',scrollTrigger:{trigger:'.contact-photo',start:'top 82%',once:true}});
-  gsap.utils.toArray<HTMLElement>('.section-heading h2,.palette-copy h2,.services-header h2,.booking-intro h2,.contact-heading h2,.faq-heading h2').forEach(title=>{
-    gsap.fromTo(title,{clipPath:'inset(0 0 100% 0)'},{clipPath:'inset(0 0 0% 0)',duration:1.1,ease:'power3.out',clearProps:'clipPath',scrollTrigger:{trigger:title,start:'top 94%',once:true}});
-  });
-  return ()=>{document.body.classList.remove('motion-ready');};
-});
+}
+setUpScrollMotion();
 let resizeTimer:ReturnType<typeof setTimeout>;
-window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{setUpCollection();fitHeadline();},180);});
-motion.addEventListener('change',()=>{setUpCollection();ScrollTrigger.refresh();});
-void document.fonts.ready.then(()=>{setUpCollection();fitHeadline();});
-window.addEventListener('load',()=>{setUpCollection();ScrollTrigger.refresh();});
+window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{syncCollectionBar();fitHeadline();ScrollTrigger.refresh();},180);});
+motion.addEventListener('change',()=>{setUpScrollMotion();ScrollTrigger.refresh();});
+void document.fonts.ready.then(()=>{syncCollectionBar();fitHeadline();ScrollTrigger.refresh();});
+window.addEventListener('load',()=>{syncCollectionBar();ScrollTrigger.refresh();});
 
 const palette=document.querySelector<HTMLElement>('.palette-section');
+const paletteDisc=palette?.querySelector<HTMLElement>('.palette-disc');
+let discPulse:Animation|undefined;
+motion.addEventListener('change',()=>{if(motion.matches)discPulse?.cancel();});
 const polishHost=document.getElementById('polish-3d');
 let polishViewer:PolishViewer|null=null;
 let requestedColor='#782f3e';
@@ -450,7 +482,14 @@ document.querySelectorAll<HTMLButtonElement>('[data-color]').forEach(button=>but
   palette.style.setProperty('--polish',requestedColor);
   if(polishViewer?.available())polishViewer.changeColor(requestedColor);
   const label=document.querySelector('.palette-color-name');if(label)label.textContent=button.dataset.colorName||'';
-  if(!motion.matches){gsap.fromTo('.palette-disc',{scale:.94},{scale:1.04,duration:1,ease:'power2.out'});if(!polishViewer?.available())gsap.fromTo('.polish-glass',{rotationY:-12},{rotationY:0,duration:.8,ease:'power2.out'});}
+  if(!motion.matches){
+    // Animate scale alone: the circle's independent CSS translation stays untouched.
+    discPulse?.cancel();
+    discPulse=paletteDisc?.animate([{scale:1},{scale:1.035,offset:.4},{scale:1}],{duration:950,easing:'ease-in-out'});
+    if(!polishViewer?.available()){
+      gsap.to('.polish-glass',{rotationY:'+=360',duration:1.9,ease:'power2.inOut',overwrite:'auto'});
+    }
+  }
 }));
 
 document.querySelectorAll<HTMLDetailsElement>('.service-row').forEach(details=>{

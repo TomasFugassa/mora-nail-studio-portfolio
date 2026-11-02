@@ -4,8 +4,8 @@ import { mkdirSync, readFileSync, writeFileSync, chmodSync } from 'node:fs';
 import path from 'node:path';
 import { extraHeroCopy } from '../data/hero-copy.mjs';
 
-export const demo = process.env.MORA_DEMO_MODE !== 'false';
-const dataDir = path.resolve(process.env.MORA_DATA_DIR || '.mora-data');
+export const demo = process.env.BERE_DEMO_MODE !== 'false';
+const dataDir = path.resolve(process.env.BERE_DATA_DIR || '.bere-data');
 let connection;
 export class Problem extends Error {
   constructor(status, message) {
@@ -54,7 +54,7 @@ export function zonedTime(date, minutes) {
 export function db() {
   if (connection) return connection;
   mkdirSync(dataDir, { recursive: true });
-  connection = new DatabaseSync(path.join(dataDir, 'mora.sqlite'));
+  connection = new DatabaseSync(path.join(dataDir, 'bere.sqlite'));
   connection.exec('PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000; PRAGMA foreign_keys=ON;');
   connection.exec(`CREATE TABLE IF NOT EXISTS content(id INTEGER PRIMARY KEY CHECK(id=1),version INTEGER NOT NULL,payload TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS admin(id INTEGER PRIMARY KEY CHECK(id=1),password TEXT NOT NULL);
@@ -97,7 +97,7 @@ export function db() {
         {
           question: '¿Cómo reservo un turno?',
           answer:
-            'La agenda usa horarios ficticios y las consultas no se envían a ningún contacto real.',
+            'Elegí servicio, fecha y hora en la agenda. Tu turno se confirma al guardar la reserva. WhatsApp queda disponible para consultas.',
         },
         {
           question: '¿Puedo compartir un diseño?',
@@ -132,9 +132,9 @@ export function db() {
     connection.prepare('INSERT INTO content VALUES(1,1,?)').run(JSON.stringify(site));
   }
   if (!connection.prepare('SELECT id FROM admin WHERE id=1').get()) {
-    let password = process.env.MORA_ADMIN_PASSWORD;
+    let password = process.env.BERE_ADMIN_PASSWORD;
     if (!password) {
-      if (!demo) throw new Error('Configurar MORA_ADMIN_PASSWORD antes del primer inicio.');
+      if (!demo) throw new Error('Configurar BERE_ADMIN_PASSWORD antes del primer inicio.');
       password = randomBytes(18).toString('base64url');
       writeFileSync(
         '.local-admin-access.txt',
@@ -147,7 +147,7 @@ export function db() {
     connection.prepare('INSERT INTO admin VALUES(1,?)').run(passwordHash(password));
   }
   try {
-    chmodSync(path.join(dataDir, 'mora.sqlite'), 0o600);
+    chmodSync(path.join(dataDir, 'bere.sqlite'), 0o600);
   } catch {}
   return connection;
 }

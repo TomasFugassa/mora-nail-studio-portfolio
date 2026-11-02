@@ -5,7 +5,7 @@ import path from 'node:path';
 import assert from 'node:assert/strict';
 import {reviewServiceGroups} from './review-editor.mjs';
 const url=process.env.MORA_TEST_URL||'http://127.0.0.1:4324';
-const output=path.resolve('qa-output/signature-3d/general'+(process.argv.includes('--quick')?'/quick':''));mkdirSync(output,{recursive:true});
+const output=path.resolve('qa-output/product-refinement/general'+(process.argv.includes('--quick')?'/quick':''));mkdirSync(output,{recursive:true});
 const browser=await chromium.launch({executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true,args:['--enable-unsafe-swiftshader','--use-angle=swiftshader']});
 const report={checks:[],errors:[],resources:[],accessibility:[],viewports:[]};
 const watch=page=>{
@@ -89,7 +89,8 @@ try{
     assert.equal(await web.locator('h1').count(),1);
     const entries=await web.locator('.gallery-item').evaluateAll(elements=>elements.map(element=>element.dataset.category));
     assert.equal(entries.length,7);
-    assert.equal(await web.locator('#inquiry-form').getAttribute('data-phone'),'59800000000');
+    assert.ok(!(await web.locator('body').textContent()).includes('BeRe'));
+    assert.equal(await web.locator('#inquiry-form').getAttribute('data-phone'),'59895983487');
     for(const id of ['sutil','color','arte','all']){
       const count=id==='all'?entries.length:entries.filter(category=>category===id).length;
       await web.locator(`[data-filter="${id}"]`).click();
@@ -101,18 +102,18 @@ try{
     await web.locator('#service').selectOption('SoftGel');await web.locator('#idea').fill('Me interesa una web para mi negocio');
     await web.evaluate(()=>{window.open=url=>{window.__qaWhatsApp=String(url);return null;};});
     await web.locator('#inquiry-form button[type=submit]').click();
-    const wa=await web.evaluate(()=>window.__qaWhatsApp);assert.equal(wa,undefined);
-    report.checks.push('Filtros, visor, navegación, referencia y consulta de demostración sin envío');
+    const wa=await web.evaluate(()=>window.__qaWhatsApp);assert.equal(new URL(wa).pathname,'/59895983487');assert.ok(new URL(wa).searchParams.get('text').includes('Pearl'));
+    report.checks.push('Filtros, visor, navegación, referencia y consulta hacia el WhatsApp de Tomás sin enviar mensajes');
     await web.locator('#booking-service').selectOption('semi');
     await web.waitForFunction(()=>document.querySelector('#booking-date').options.length>1);
     const date=await web.locator('#booking-date option').nth(1).getAttribute('value');await web.locator('#booking-date').selectOption(date);
     await web.locator('.slot-button').first().click();await web.locator('#booking-name').fill('Persona QA');await web.locator('#booking-phone').fill('099123456');
     await web.locator('#booking-submit').click();await web.locator('#booking-result').waitFor({state:'visible'});
     const privateLink=await web.locator('#booking-private-link').getAttribute('href');
-    assert.ok(await web.locator('#booking-whatsapp').isHidden());
+    assert.equal(new URL(await web.locator('#booking-whatsapp').getAttribute('href')).pathname,'/59895983487');
     const token=new URLSearchParams(privateLink.split('#')[1]).get('token');
     const cancelled=await web.request.post(url+'/api/booking',{headers:{Origin:url},data:{action:'cancel',token}});assert.equal(cancelled.status(),200);
-    report.checks.push('Reserva de prueba guardada, enlace privado, contacto desactivado y cancelación');
+    report.checks.push('Reserva pública guardada, enlace privado, WhatsApp correcto y cancelación del turno de prueba');
     const password=readFileSync('.local-admin-access.txt','utf8').match(/Contraseña inicial: ([^\r\n]+)/)[1];
     const admin=await reduced.newPage();watch(admin);await admin.goto(url+'/admin',{waitUntil:'networkidle'});
     await admin.locator('#admin-password').fill(password);await admin.locator('#login-form button[type=submit]').click();

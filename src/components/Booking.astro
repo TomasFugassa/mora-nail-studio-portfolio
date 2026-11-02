@@ -1,5 +1,5 @@
 ---
-import {demo} from '../server/store.mjs';
+
 interface Props { backdrop?: string }
 const {backdrop}=Astro.props;
 ---
@@ -8,7 +8,6 @@ const {backdrop}=Astro.props;
   <div class="booking-shell">
     <div class="booking-intro"><p class="eyebrow">LA AGENDA</p><h2 id="booking-title">Tu próximo<br/><em>turno, acá</em></h2><p>Elegí un servicio, buscá un día y encontrá el horario que te quede mejor.</p><div class="booking-steps"><span>Servicio</span><span>Fecha y hora</span><span>Confirmación</span></div></div>
     <div class="booking-card">
-      {demo&&<p class="demo-notice">Agenda de demostración · Podés probar sin generar una cita real.</p>}
       <form id="booking-form">
         <div class="booking-field"><label for="booking-service">¿Qué te gustaría hacerte?</label><select id="booking-service" required><option value="">Cargando servicios…</option></select></div>
         <div class="booking-field"><label for="booking-date">Elegí un día</label><select id="booking-date" required><option value="">Elegí primero un servicio</option></select></div>

@@ -48,7 +48,7 @@ function instructions() {
   });
   const note = document.createElement('small');
   note.textContent =
-    'Necesitás conexión para ver la agenda y guardar cambios. La instalación en el celular estará disponible cuando el sitio tenga su enlace HTTPS. La opción exacta depende del navegador.';
+    'Necesitás conexión para ver la agenda y guardar cambios. Para instalarlo en un celular, abrí el panel desde su enlace HTTPS. La opción exacta depende del navegador.';
   content.append(text, steps, note);
   body.append(content);
   dialog.showModal();
@@ -67,7 +67,7 @@ async function install() {
   } else instructions();
 }
 document.querySelectorAll('.install-trigger').forEach((b) => b.addEventListener('click', install));
-document.addEventListener('mora:install', install);
+document.addEventListener('bere:install', install);
 function network() {
   const notice = document.getElementById('offline-notice');
   if (notice) notice.hidden = navigator.onLine;

@@ -9,12 +9,14 @@ qa-output/
 presentacion/*.mp4
 presentacion/*.webm
 
-.mora-data/
+.bere-data/
 .local-admin-access.txt
 
-.mora-review-data/
+.bere-review-data/
 
 REVIEW-ACCESS.txt
+
 .mora-owner
-*.sqlite
-*.sqlite-*
+.mora-data/
+.mora-review-data/
+public/pwa/bere-*.png

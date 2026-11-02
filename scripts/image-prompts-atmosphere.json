@@ -1,0 +1,13 @@
+{
+  "tool": "image_gen built-in",
+  "assets": [
+    {
+      "file": "src/assets/mora-atmosphere-card.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: editorial photograph for a nail studio website's soft-focus edge background. Primary request: an original luxury beauty photograph of an adult woman's naturally proportioned hand with glossy almond-shaped chocolate-brown nails holding a simple cream playing card with one small gold diamond symbol, no letters or brand names. Scene: warm ivory silk sleeve and warm taupe studio background, soft late afternoon window light, subtle shadows, genuine skin texture and restrained styling. Vertical 2:3 composition, hand and card occupying the lower center, generous cream negative space around. Sophisticated warm neutral colors; realistic fine details, exactly five anatomically coherent fingers, no duplicate hands. No text, no watermark, no logo, no interface. Create only the photograph, not a website or collage."
+    },
+    {
+      "file": "src/assets/mora-atmosphere-cocoa.png",
+      "prompt": "Use case: photorealistic-natural. Asset type: editorial beauty photograph for a nail studio website's diffused background. Primary request: original still life of a single adult woman's elegant hand with medium-length almond nails painted deep cocoa brown, holding a small broken piece of dark chocolate between thumb and forefinger. Backdrop: warm pale ivory surface, soft natural side light, very shallow depth of field and a broad out-of-focus shadow, tasteful brown and cream palette. Vertical 2:3 photograph. Hand enters from lower left, chocolate near upper center, ample pale negative space. Natural skin, physically coherent grip, exactly five anatomically plausible fingers, no jewelry or packaging. No text, logo, watermark, collage or website interface."
+    }
+  ]
+}

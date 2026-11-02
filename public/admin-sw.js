@@ -1,6 +1,6 @@
 // Only the public offline notice and install icons are cached. Never cache sessions,
 // the admin HTML, APIs, bookings, customer data or uploads.
-const CACHE = 'mora-admin-shell-v2';
+const CACHE = 'mora-admin-shell-v3';
 const SHELL = [
   '/admin-offline.html',
   '/pwa/mora-192.png',
@@ -22,7 +22,7 @@ self.addEventListener('activate', (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key.startsWith('mora-admin-shell-') && key !== CACHE)
+            .filter((key) => /^(?:bere|mora)-admin-shell-/.test(key) && key !== CACHE)
             .map((key) => caches.delete(key)),
         ),
       )

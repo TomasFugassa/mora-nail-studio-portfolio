@@ -4,35 +4,35 @@ import { randomBytes, createHmac, createHash, timingSafeEqual } from 'node:crypt
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
-const password = process.env.MORA_REVIEW_PASSWORD || '';
-const adminPassword = process.env.MORA_ADMIN_PASSWORD || '';
-const origin = new URL(process.env.MORA_SITE_ORIGIN || 'http://127.0.0.1:4324');
+const password = process.env.BERE_REVIEW_PASSWORD || '';
+const adminPassword = process.env.BERE_ADMIN_PASSWORD || '';
+const origin = new URL(process.env.BERE_SITE_ORIGIN || 'http://127.0.0.1:4324');
 if (password.length < 16 || password.length > 128)
-  throw Error('Configurar MORA_REVIEW_PASSWORD de 16 a 128 caracteres');
+  throw Error('Configurar BERE_REVIEW_PASSWORD de 16 a 128 caracteres');
 if (adminPassword.length < 12 || adminPassword.length > 128)
-  throw Error('Configurar MORA_ADMIN_PASSWORD de 12 a 128 caracteres');
-if (process.env.MORA_DEMO_MODE !== 'true')
-  throw Error('El servidor de revisión requiere MORA_DEMO_MODE=true');
+  throw Error('Configurar BERE_ADMIN_PASSWORD de 12 a 128 caracteres');
+if (process.env.BERE_DEMO_MODE !== 'true')
+  throw Error('El servidor de revisión requiere BERE_DEMO_MODE=true');
 if (
   origin.pathname !== '/' ||
   origin.search ||
   origin.hash ||
   !['http:', 'https:'].includes(origin.protocol)
 )
-  throw Error('Revisar MORA_SITE_ORIGIN');
+  throw Error('Revisar BERE_SITE_ORIGIN');
 const port = Number(process.env.PORT || 4321);
-const insidePort = Number(process.env.MORA_INTERNAL_PORT || 4331);
+const insidePort = Number(process.env.BERE_INTERNAL_PORT || 4331);
 if (!Number.isInteger(port) || !Number.isInteger(insidePort) || port === insidePort)
   throw Error('Revisar los puertos');
 const ttl = 12 * 3600;
-const cookieName = 'mora_review';
-const seedFile = process.env.MORA_CONTENT_SEED;
-const dataDirectory = path.resolve(process.env.MORA_DATA_DIR || '.mora-review-data');
-process.env.MORA_DATA_DIR = dataDirectory;
+const cookieName = 'bere_review';
+const seedFile = process.env.BERE_CONTENT_SEED;
+const dataDirectory = path.resolve(process.env.BERE_DATA_DIR || '.bere-review-data');
+process.env.BERE_DATA_DIR = dataDirectory;
 
 // Import only the explicitly exported public content into a fresh review database.
 // Never copy customer data, admin passwords, sessions, or the original SQLite file.
-if (!existsSync(path.join(dataDirectory, 'mora.sqlite')) && seedFile) {
+if (!existsSync(path.join(dataDirectory, 'bere.sqlite')) && seedFile) {
   const { content, media } = JSON.parse(readFileSync(seedFile, 'utf8'));
   const { getContent, saveContent, db } = await import('../src/server/store.mjs');
   const initial = getContent();
@@ -253,7 +253,7 @@ server = http.createServer(async (request, response) => {
             { ...security, 'Retry-After': '900' },
           );
         const adminCookie = result.headers.get('set-cookie');
-        if (!result.ok || !adminCookie?.startsWith('mora_admin='))
+        if (!result.ok || !adminCookie?.startsWith('bere_admin='))
           return respond(
             response,
             502,

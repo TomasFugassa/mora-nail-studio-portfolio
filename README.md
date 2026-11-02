@@ -1,20 +1,28 @@
 # Mora Nail Studio
 
-Demostración para un estudio de uñas ficticio, con galería, reservas de prueba y panel de administración. Desarrollada con Astro, TypeScript, Node.js, SQLite, GSAP y Three.js.
+Muestra de un estudio de uñas: colección, frasco 3D, servicios, reservas y panel de administración. Astro, TypeScript, GSAP, Three.js y SQLite. Las animaciones funcionan desde la dirección normal, sin parámetros adicionales.
 
-## Ejecutar
+## Abrir
 
-Con Node.js 22.16 o posterior:
+Con Node 22.16 o posterior:
 
-```bash
+```sh
 npm ci
 npm run dev
 ```
 
-Abrí http://127.0.0.1:4324. El panel está en `/admin`; su contraseña inicial se guarda en `.local-admin-access.txt`. La agenda es de prueba y las consultas no se envían a un contacto real.
+- Web: http://127.0.0.1:4324/
+- Panel: http://127.0.0.1:4324/admin
+- También podés abrir **VER-DEMO.cmd** después de instalar las dependencias.
+- La contraseña inicial del panel se genera en `.local-admin-access.txt`; después se cambia desde el panel.
 
-Para comprobar el proyecto: `npm run check`, `npm run test:booking` y `npm run build`. Usá únicamente datos ficticios: esta configuración no está preparada para producción.
+Para verla desde el celular en el mismo router, abrí **VER-EN-CELULAR.cmd** o ejecutá `npm run dev:lan`. Usá la dirección **Network** que muestra la consola, seguida de `/admin` para el panel.
 
-## Imágenes
+## Conservar y comprobar
 
-Las imágenes de uñas son generadas para la demostración. Las fotos de fondo son de [Brigitte Elsner](https://unsplash.com/photos/blurred-pink-flowers-against-dark-background-_NnGJYw02Z8) y [Liana S](https://unsplash.com/photos/blurred-flowers-are-illuminated-by-the-sunlight-sgz8EmKqn0g), bajo la [licencia de Unsplash](https://unsplash.com/license).
+- `npm run check`: revisar el código. `npm run build`: generar la versión compilada.
+- Datos locales: `.bere-data/`. No se suben a GitHub las bases, contraseñas, sesiones ni archivos `.env`.
+- Los horarios son de prueba. WhatsApp prepara consultas al **095 983 487** sin enviarlas automáticamente.
+- Imágenes de uñas generadas para la muestra. Créditos de los fondos en `scripts/atmosphere-sources.json`.
+
+El repositorio guarda el código. No hay alojamiento ni despliegue automático configurado; estas direcciones solo funcionan en tu computadora o red local.

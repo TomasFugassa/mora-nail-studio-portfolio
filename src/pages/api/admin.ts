@@ -35,9 +35,9 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
     if (input.action === 'login') {
       rateLimit('login:' + clientAddress, 8, 15);
       const token = login(input.password);
-      cookies.set('mora_admin', token, {
+      cookies.set('bere_admin', token, {
         httpOnly: true,
-        secure: (process.env.MORA_SITE_ORIGIN || request.url).startsWith('https:'),
+        secure: (process.env.BERE_SITE_ORIGIN || request.url).startsWith('https:'),
         sameSite: 'strict',
         path: '/',
         maxAge: 43200,
@@ -46,8 +46,8 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
     }
     requireAdmin(cookies);
     if (input.action === 'logout') {
-      logout(cookies.get('mora_admin')?.value);
-      cookies.delete('mora_admin', { path: '/' });
+      logout(cookies.get('bere_admin')?.value);
+      cookies.delete('bere_admin', { path: '/' });
       return json({ ok: true });
     }
     if (input.action === 'save') return json({ content: saveContent(input.content) });
@@ -65,7 +65,7 @@ export const POST: APIRoute = async ({ request, cookies, clientAddress }) => {
     }
     if (input.action === 'password') {
       changePassword(input.password);
-      cookies.delete('mora_admin', { path: '/' });
+      cookies.delete('bere_admin', { path: '/' });
       return json({ ok: true });
     }
     return json({ error: 'Operación desconocida.' }, 400);

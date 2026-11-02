@@ -10,20 +10,20 @@ import AxeBuilder from '@axe-core/playwright';
 const url = 'http://127.0.0.1:4397',
   password = randomUUID(),
   adminPassword = randomUUID();
-const directory = mkdtempSync(path.join(os.tmpdir(), 'mora-review-test-'));
+const directory = mkdtempSync(path.join(os.tmpdir(), 'bere-review-test-'));
 let processHandle,
   browser,
   logs = '';
 const env = {
   ...process.env,
-  MORA_REVIEW_PASSWORD: password,
-  MORA_ADMIN_PASSWORD: adminPassword,
-  MORA_DEMO_MODE: 'true',
-  MORA_DATA_DIR: directory,
-  MORA_SITE_ORIGIN: url,
+  BERE_REVIEW_PASSWORD: password,
+  BERE_ADMIN_PASSWORD: adminPassword,
+  BERE_DEMO_MODE: 'true',
+  BERE_DATA_DIR: directory,
+  BERE_SITE_ORIGIN: url,
   HOST: '127.0.0.1',
   PORT: '4397',
-  MORA_INTERNAL_PORT: '4398',
+  BERE_INTERNAL_PORT: '4398',
 };
 async function start() {
   processHandle = spawn(process.execPath, ['scripts/review-server.mjs'], {
@@ -238,10 +238,10 @@ try {
     const data = await device.evaluate(async () => await (await fetch('/api/admin')).json());
     assert.equal(data.content.copy.heroDescription, 'Cambio persistente de revisión');
     const cookies = await isolated.cookies();
-    assert.ok(cookies.some((c) => c.name === 'mora_review'));
-    assert.ok(cookies.some((c) => c.name === 'mora_admin'));
+    assert.ok(cookies.some((c) => c.name === 'bere_review'));
+    assert.ok(cookies.some((c) => c.name === 'bere_admin'));
     if (options.viewport.width === 393) {
-      await isolated.clearCookies({ name: 'mora_review' });
+      await isolated.clearCookies({ name: 'bere_review' });
       await device.locator('[data-route="agenda"]').click();
       await device.getByRole('button', { name: 'Actualizar agenda', exact: true }).click();
       await device.getByLabel('Contraseña del panel', { exact: true }).waitFor();
@@ -254,7 +254,7 @@ try {
     'La contraseña inicial no vuelve a funcionar después del cambio',
   );
   await stop();
-  env.MORA_ADMIN_PASSWORD = randomUUID();
+  env.BERE_ADMIN_PASSWORD = randomUUID();
   await start();
   const afterRestart = await request('/revision', form(changedPassword, '/admin'));
   assert.equal(

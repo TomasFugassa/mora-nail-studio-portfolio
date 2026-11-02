@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';import {mkdtempSync} from 'node:fs';import os from 'node:os';import path from 'node:path';import {randomUUID} from 'node:crypto';
-process.env.MORA_DATA_DIR=mkdtempSync(path.join(os.tmpdir(),'mora-schedule-'));process.env.MORA_DEMO_MODE='true';process.env.MORA_ADMIN_PASSWORD=randomUUID();
+process.env.BERE_DATA_DIR=mkdtempSync(path.join(os.tmpdir(),'bere-schedule-'));process.env.BERE_DEMO_MODE='true';process.env.BERE_ADMIN_PASSWORD=randomUUID();
 const realNow=Date.now;let now=Date.parse('2026-11-02T11:01:00-03:00');Date.now=()=>now;
 const {getContent,saveContent,publicAvailability,reserve,cancelBooking,changeBooking,db}=await import('../src/server/store.mjs');
 const date='2026-11-02';

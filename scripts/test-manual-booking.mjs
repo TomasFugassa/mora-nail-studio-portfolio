@@ -4,9 +4,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 
-process.env.MORA_DATA_DIR = mkdtempSync(path.join(os.tmpdir(), 'mora-manual-test-'));
-process.env.MORA_DEMO_MODE = 'true';
-process.env.MORA_ADMIN_PASSWORD = randomUUID();
+process.env.BERE_DATA_DIR = mkdtempSync(path.join(os.tmpdir(), 'bere-manual-test-'));
+process.env.BERE_DEMO_MODE = 'true';
+process.env.BERE_ADMIN_PASSWORD = randomUUID();
 const realNow = Date.now;
 const date = '2026-11-02';
 const at = (time, day = date) => Date.parse(day + 'T' + time + ':00-03:00');

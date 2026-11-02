@@ -5,9 +5,9 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { fork } from 'node:child_process';
 if (!process.argv.includes('--race-worker')) {
-  process.env.MORA_DATA_DIR = mkdtempSync(path.join(os.tmpdir(), 'mora-booking-test-'));
-  process.env.MORA_DEMO_MODE = 'true';
-  process.env.MORA_ADMIN_PASSWORD = randomUUID();
+  process.env.BERE_DATA_DIR = mkdtempSync(path.join(os.tmpdir(), 'bere-booking-test-'));
+  process.env.BERE_DEMO_MODE = 'true';
+  process.env.BERE_ADMIN_PASSWORD = randomUUID();
 }
 const store = await import('../src/server/store.mjs');
 if (process.argv.includes('--race-worker')) {
@@ -128,11 +128,11 @@ if (process.argv.includes('--race-worker')) {
   assert.equal(newer.booking.enabled, false);
   assert.throws(() => reserve(payload(initial[10].start)), { status: 409 });
   assert.throws(() => saveContent(base), { status: 409 });
-  const token = login(process.env.MORA_ADMIN_PASSWORD);
+  const token = login(process.env.BERE_ADMIN_PASSWORD);
   assert.ok(authenticated(token));
   changePassword(randomUUID());
   assert.equal(authenticated(token), false);
-  const backup = path.join(process.env.MORA_DATA_DIR, 'backup.sqlite');
+  const backup = path.join(process.env.BERE_DATA_DIR, 'backup.sqlite');
   db().exec("VACUUM INTO '" + backup.replaceAll("'", "''") + "'");
   const { DatabaseSync } = await import('node:sqlite'),
     snapshot = new DatabaseSync(backup, { readOnly: true });

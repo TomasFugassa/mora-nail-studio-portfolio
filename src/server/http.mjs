@@ -15,7 +15,7 @@ export function failure(error) {
   return json({ error: 'No pudimos completar la operación. Volvé a intentar.' }, 500);
 }
 export function sameOrigin(request) {
-  const expected = process.env.MORA_SITE_ORIGIN || new URL(request.url).origin;
+  const expected = process.env.BERE_SITE_ORIGIN || new URL(request.url).origin;
   if (request.headers.get('origin') !== expected)
     throw new Problem(403, 'Solicitud no autorizada. Recargá la página.');
 }
@@ -33,6 +33,6 @@ export async function body(request) {
   }
 }
 export function requireAdmin(cookies) {
-  if (!authenticated(cookies.get('mora_admin')?.value))
+  if (!authenticated(cookies.get('bere_admin')?.value))
     throw new Problem(401, 'Iniciá sesión para continuar.');
 }

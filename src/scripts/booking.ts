@@ -1,3 +1,4 @@
+import { randomId } from '../lib/browser-id';
 export {};
 type Service = { id: string; name: string; minutes: number };
 type Availability = {
@@ -15,9 +16,10 @@ const form = document.querySelector<HTMLFormElement>('#booking-form'),
   submit = document.querySelector<HTMLButtonElement>('#booking-submit'),
   status = document.getElementById('booking-status');
 let selected: number | null = null,
-  key = crypto.randomUUID(),
+  key = randomId(),
   loading = false,
-  requestVersion = 0;
+  requestVersion = 0,
+  sitePhone = '';
 const message = (text: string) => {
   if (status) status.textContent = text;
 };
@@ -113,7 +115,7 @@ async function load() {
       button.setAttribute('aria-pressed', 'false');
       button.addEventListener('click', () => {
         selected = slot.start;
-        key = crypto.randomUUID();
+        key = randomId();
         slots
           .querySelectorAll('button')
           .forEach((b) => b.setAttribute('aria-pressed', String(b === button)));
@@ -186,16 +188,15 @@ form?.addEventListener('submit', async (event) => {
     const summary = document.getElementById('booking-summary');
     if (summary) summary.textContent = `${data.service} · ${when} (Uruguay)`;
     const label = document.getElementById('booking-result-label');
-    if (label && data.demo) label.textContent = 'Reserva de demostración guardada';
+    if (label) label.textContent = 'Turno confirmado';
     const link = document.querySelector<HTMLAnchorElement>('#booking-private-link');
     if (link) link.href = '/mi-turno#token=' + encodeURIComponent(data.token);
     const wa = document.querySelector<HTMLAnchorElement>('#booking-whatsapp');
-    if (wa) wa.hidden = true;
-    message(
-      data.demo
-        ? 'Turno de prueba guardado; no corresponde a una cita real.'
-        : 'Reserva guardada. No necesitás abrir WhatsApp para confirmarla.',
-    );
+    sitePhone =
+      document.querySelector<HTMLFormElement>('#inquiry-form')?.dataset.phone || '59895983487';
+    if (wa)
+      wa.href = `https://wa.me/${sitePhone}?text=${encodeURIComponent(`¡Hola, Mora! Reservé un turno en la página. Soy ${data.name}. Servicio: ${data.service}. ${when}. Referencia: ${data.id.slice(0, 8)}.`)}`;
+    message('Reserva guardada. No necesitás abrir WhatsApp para confirmarla.');
   } catch (error) {
     message(
       error instanceof Error
@@ -211,7 +212,7 @@ document.getElementById('booking-another')?.addEventListener('click', () => {
   if (form) form.hidden = false;
   const result = document.getElementById('booking-result');
   if (result) result.hidden = true;
-  key = crypto.randomUUID();
+  key = randomId();
   void load();
 });
 document.addEventListener('visibilitychange', () => {

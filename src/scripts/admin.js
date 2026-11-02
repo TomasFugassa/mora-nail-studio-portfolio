@@ -1,4 +1,5 @@
 import { headingText } from '../lib/headings';
+import { randomId } from '../lib/browser-id';
 export {};
 const $ = (id) => document.getElementById(id),
   editor = $('admin-editor'),
@@ -13,7 +14,8 @@ let data,
   query = '',
   modalDirty = false,
   busy = false,
-  toastTimer;
+  toastTimer,
+  renderedTab;
 const states = { confirmed: 'Confirmado', completed: 'Realizado', cancelled: 'Cancelado' };
 const sections = {
   home: 'Inicio',
@@ -32,7 +34,7 @@ const paths = {
   users:
     'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m20 0v-2a4 4 0 0 0-3-3.87M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8m8-7a4 4 0 0 1 0 8',
   image: 'M3 3h18v18H3Zm0 13 5-5 5 5 3-3 5 5M15 7h.01',
-  spark: 'm12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Z',
+  spark: 'M15 3l6 6-9 9-6-6ZM6 12l-2 2a4 4 0 0 0 0 6c2 1 5 0 6-2l2-2M13 5l6 6',
   clock: 'M12 8v5l3 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
   layout: 'M3 3h18v18H3Zm0 6h18M9 9v12',
   pin: 'M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0M15 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0',
@@ -234,7 +236,7 @@ function formModal(
     actions.append(submit);
     const ready = () => !busy && (!read.canSubmit || read.canSubmit());
     submit.disabled = !ready();
-    form.addEventListener('mora:ready', () => (submit.disabled = !ready()));
+    form.addEventListener('bere:ready', () => (submit.disabled = !ready()));
     form.append(error, actions);
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -318,11 +320,15 @@ function go(next) {
 function render() {
   if (!data) return;
   editor.replaceChildren();
+  editor.dataset.view = tab;
   document.querySelectorAll('[data-tab],[data-route]').forEach((b) => {
     if ((b.dataset.tab || b.dataset.route) === tab) b.setAttribute('aria-current', 'page');
     else b.removeAttribute('aria-current');
   });
   $('panel-breadcrumb').lastElementChild.textContent = sections[tab];
+  $('mobile-section-label').textContent = sections[tab];
+  if (!['home', 'agenda', 'photos'].includes(tab)) $('more-nav').setAttribute('aria-current', 'page');
+  else $('more-nav').removeAttribute('aria-current');
   ({
     home: homeView,
     agenda: agendaView,
@@ -334,6 +340,13 @@ function render() {
     location: locationView,
     access: accessView,
   })[tab]();
+  if (renderedTab !== tab && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    [...editor.children].forEach((element, index) => element.animate(
+      [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'translateY(0)' }],
+      { duration: 440, delay: Math.min(index, 5) * 40, easing: 'cubic-bezier(.22,.7,.2,1)', fill: 'backwards' },
+    ));
+  }
+  renderedTab = tab;
 }
 function bookingRow(parent, b) {
   const row = el('button', undefined, 'booking-row');
@@ -432,7 +445,7 @@ function homeView() {
       .filter((b) => b.status === 'confirmed' && b.start >= Date.now() && b.phone)
       .sort((a, b) => a.start - b.start),
     todays = bookings.filter((b) => today(b.start) === today() && b.status === 'confirmed');
-  heading(dateLabel(today()), 'Hola.', 'Un poquito de orden · Más espacio para crear', (h) =>
+  heading(dateLabel(today()), 'Hoy en Mora', 'Tu agenda, tus diseños y tu página, en un mismo lugar.', (h) =>
     button(
       h,
       'Ver mi página',
@@ -441,18 +454,28 @@ function homeView() {
       'arrow',
     ),
   );
+  const featured = data.collection.photos.find((photo) => photo.id === data.collection.heroId);
   const hero = el('div', undefined, 'dashboard-hero'),
-    copy = el('div');
+    copy = el('div', undefined, 'dashboard-copy');
   copy.append(
-    el('p', 'TU ESTUDIO, EN CALMA', 'eyebrow'),
-    el('h2', 'Cada encuentro,\nun pequeño detalle.'),
-    el('p', 'Organizá tus días y compartí lo que te encanta hacer.'),
+    el('p', 'LA AGENDA DEL ESTUDIO', 'eyebrow'),
+    el('h2', 'Cada turno,\nen su lugar'),
+    el('p', 'Agendá una visita, revisá los próximos turnos y actualizá tu colección.'),
   );
   const actions = el('div', undefined, 'hero-quick');
-  button(actions, 'Abrir mi agenda', () => go('agenda'), 'light-button', 'calendar');
-  button(actions, 'Subir un trabajo', () => editPhoto(), 'transparent-light', 'plus');
+  button(actions, 'Agendar un turno', manualBookingDialog, 'light-button', 'calendar');
+  button(actions, 'Subir un diseño', () => editPhoto(), 'transparent-light', 'plus');
   copy.append(actions);
-  hero.append(copy, el('span', '✳', 'hero-decoration'));
+  const visual = el('figure', undefined, 'dashboard-visual'),
+    heroPhoto = el('img'),
+    caption = el('figcaption');
+  heroPhoto.src = photoSrc(featured);
+  heroPhoto.alt = featured.alt;
+  heroPhoto.width = 600;
+  heroPhoto.height = 750;
+  caption.append(el('span', 'DE TU COLECCIÓN'), el('strong', featured.title));
+  visual.append(heroPhoto, caption);
+  hero.append(copy, visual);
   editor.append(hero);
   const stats = el('div', undefined, 'stat-grid');
   [
@@ -477,7 +500,7 @@ function homeView() {
   const grid = el('div', undefined, 'home-grid'),
     agenda = el('section', undefined, 'surface'),
     top = el('div', undefined, 'surface-heading');
-  top.append(el('h2', 'Los próximos encuentros'));
+    top.append(el('h2', 'Próximos turnos'));
   button(top, 'Ver agenda', () => go('agenda'), 'text-button');
   agenda.append(top);
   if (!upcoming.length)
@@ -494,17 +517,17 @@ function homeView() {
   image.alt = 'Diseño destacado de la colección';
   side.append(
     image,
-    el('p', 'TU ESTILO SIGUE CRECIENDO', 'eyebrow'),
-    el('h2', 'Mostrá tu\núltima creación.'),
+    el('p', 'EN TU PÁGINA', 'eyebrow'),
+    el('h2', featured.title),
   );
   button(side, 'Ir a mi galería', () => go('photos'), 'text-button', 'arrow');
   grid.append(agenda, side);
   editor.append(grid);
   const shortcuts = el('div', undefined, 'shortcut-grid');
   [
-    ['hours', 'Abrí nuevos espacios', 'Agregá días y horarios disponibles.', 'clock'],
-    ['services', 'A tu manera', 'Revisá servicios y duración.', 'spark'],
-    ['content', 'Hacé tuya la página', 'Editá los textos y tus datos.', 'layout'],
+    ['hours', 'Horarios de atención', 'Publicá días y franjas disponibles.', 'clock'],
+    ['services', 'Servicios y duración', 'Actualizá las técnicas que ofrecés.', 'spark'],
+    ['content', 'Contenido de tu página', 'Editá los textos y tus datos.', 'layout'],
   ].forEach(([route, title, text, ico]) => {
     const b = button(shortcuts, title, () => go(route), 'shortcut-card', ico);
     b.append(el('small', text));
@@ -612,7 +635,7 @@ function agendaView() {
 }
 function blockDialog() {
   formModal(
-    'Reservá un espacio para vos.',
+    'Bloquear un horario',
     'Bloqueá compromisos o turnos que coordinaste por otro medio.',
     (c) => {
       const d = field(c, 'Día', day, { type: 'date', required: true, min: today() }),
@@ -636,7 +659,7 @@ function blockDialog() {
 }
 function photosView() {
   heading(
-    'PEQUEÑAS OBRAS, GRAN ACTITUD',
+    'LA COLECCIÓN MORA',
     'Tu colección.',
     'Tus trabajos, protagonistas. Tocá una foto para editarla.',
     (h) => button(h, 'Agregar diseño', () => editPhoto(), 'primary', 'plus'),
@@ -663,7 +686,7 @@ function photosView() {
   tools.append(filters, el('span', data.collection.photos.length + ' diseños', 'muted'));
   editor.append(tools);
   const grid = el('div', undefined, 'photo-grid');
-  const add = button(grid, 'Un nuevo favorito', () => editPhoto(), 'add-photo-card', 'plus');
+  const add = button(grid, 'Nuevo diseño', () => editPhoto(), 'add-photo-card', 'plus');
   add.append(el('small', 'Subí tu próximo trabajo'));
   data.collection.photos
     .filter((p) => filter === 'all' || p.category === filter)
@@ -679,6 +702,9 @@ function photosView() {
       open.append(img, el('span', 'Editar diseño ↗', 'photo-overlay'));
       open.addEventListener('click', () => editPhoto(p.id));
       card.append(open);
+      const folio = el('span', String(data.collection.photos.indexOf(p) + 1).padStart(2, '0'), 'admin-photo-index');
+      folio.setAttribute('aria-hidden', 'true');
+      card.append(folio);
       if (p.id === data.collection.heroId) card.append(el('span', 'Portada', 'cover-badge'));
       const caption = el('div', undefined, 'photo-card-copy');
       caption.append(
@@ -694,11 +720,11 @@ function editPhoto(id) {
   const original = data.collection.photos.find((p) => p.id === id),
     draft = original
       ? { ...original }
-      : { id: crypto.randomUUID(), title: '', alt: '', category: 'arte', image: '' };
+      : { id: randomId(), title: '', alt: '', category: 'arte', image: '' };
   let uploading = false;
   formModal(
-    original ? 'Ese pequeño detalle.' : 'Sumá una nueva creación.',
-    'Una foto, un nombre y tu estilo. Todo lo demás es opcional.',
+    original ? 'Editar diseño' : 'Nuevo diseño',
+    'Elegí una fotografía, un nombre y su estilo. Las demás opciones son opcionales.',
     (c) => {
       const upload = el('div', undefined, 'upload-zone'),
         image = el('img');
@@ -832,16 +858,16 @@ function editPhoto(id) {
 }
 function servicesView() {
   heading(
-    'LO QUE TE ENCANTA HACER',
+    'LA CARTA DEL ESTUDIO',
     'Tus servicios.',
     'Los servicios se ofrecen en la agenda y en las consultas. Los grupos de abajo organizan su presentación en la página.',
     (h) => button(h, 'Agregar servicio', () => editService(), 'primary', 'plus'),
   );
   const grid = el('div', undefined, 'service-grid');
-  data.booking.services.forEach((s) => {
+  data.booking.services.forEach((s, index) => {
     const card = el('article', undefined, 'service-card');
     card.append(
-      icon('spark'),
+      el('span', String(index + 1).padStart(2, '0'), 'service-index'),
       el(
         'span',
         s.active ? 'Disponible' : 'Sin reservas',
@@ -876,13 +902,13 @@ function servicesView() {
 }
 function editService(id) {
   const s = data.booking.services.find((s) => s.id === id) || {
-    id: crypto.randomUUID(),
+    id: randomId(),
     name: '',
     minutes: 60,
     active: true,
   };
   formModal(
-    id ? 'Un servicio a tu medida.' : 'Un nuevo servicio.',
+    id ? 'Editar servicio' : 'Nuevo servicio',
     'La duración determina qué espacios se ofrecen para reservar.',
     (c) => {
       const name = field(c, 'Nombre del servicio', s.name, { required: true, maxLength: 100 }),
@@ -916,7 +942,7 @@ function editService(id) {
 function editGroup(index) {
   const group = data.studio.services[index] || { title: '', description: '', tags: [] };
   formModal(
-    'Un grupo con tu estilo.',
+    index === undefined ? 'Nuevo grupo de servicios' : 'Editar grupo de servicios',
     'El título, las técnicas y la descripción aparecerán en una sección desplegable. Para ofrecer una técnica en la agenda, agregala también como servicio reservable con su duración.',
     (c) => {
       const title = field(c, 'Título del grupo', group.title, { required: true, maxLength: 100 }),
@@ -957,12 +983,13 @@ function editGroup(index) {
 }
 function hoursView() {
   heading(
-    'HACÉ LUGAR PARA LO QUE VIENE',
+    'DISPONIBILIDAD',
     'Tus horarios.',
     'Publicá tus días de atención. La agenda organiza los espacios.',
     (h) => button(h, 'Agregar horario', () => editWindow(), 'primary', 'plus'),
   );
   const summary = el('div', undefined, 'availability-banner');
+  summary.classList.toggle('is-paused', !data.booking.enabled);
   summary.append(
     icon('clock'),
     el('div', data.booking.enabled ? 'Tu agenda está abierta' : 'Tu agenda está pausada'),
@@ -993,13 +1020,13 @@ function hoursView() {
 }
 function editWindow(id) {
   const w = data.booking.windows.find((w) => w.id === id) || {
-    id: crypto.randomUUID(),
+    id: randomId(),
     date: today(),
     start: '09:00',
     end: '18:00',
   };
   formModal(
-    id ? 'Ajustá este espacio.' : 'Abrí un nuevo día.',
+    id ? 'Editar horario' : 'Nuevo horario',
     'Los turnos ya confirmados conservan su horario.',
     (c) => {
       const date = field(c, 'Día', w.date, { type: 'date', required: true }),
@@ -1035,7 +1062,7 @@ function editWindow(id) {
 }
 function bookingSettings() {
   formModal(
-    'Tu ritmo de trabajo.',
+    'Configuración de reservas',
     'La disponibilidad siempre depende de los días y franjas que publiques.',
     (c) => {
       const enabled = toggle(c, 'Recibir reservas online', data.booking.enabled),
@@ -1080,7 +1107,7 @@ function bookingSettings() {
 }
 function contentView() {
   heading(
-    'QUE SE SIENTA BIEN TUYA',
+    'TEXTOS E IDENTIDAD',
     'Tu página.',
     'Elegí qué querés cambiar. Te mostramos solo lo necesario.',
   );
@@ -1135,7 +1162,7 @@ function contentView() {
   });
   editor.append(grid);
   const faq = el('section', undefined, 'surface');
-  faq.append(el('h2', 'Pequeñas respuestas'));
+  faq.append(el('h2', 'Preguntas frecuentes'));
   data.faq.forEach((q, i) => {
     const row = el('div', undefined, 'settings-row');
     row.append(el('h3', q.question));
@@ -1147,7 +1174,7 @@ function contentView() {
 }
 function identityDialog() {
   formModal(
-    'La identidad de tu estudio.',
+    'Datos del estudio',
     'Tus datos de contacto y presentación.',
     (c) => {
       const fields = {};
@@ -1197,7 +1224,7 @@ const copyNames = {
 function copyDialog(title, keys) {
   formModal(
     title,
-    'Cada palabra cuenta. Guardá para verla en tu página.',
+    'Guardá los cambios para actualizar esta sección de tu página.',
     (c) => {
       const inputs = keys.map((key) =>
         field(c, copyNames[key], data.copy[key], {
@@ -1213,7 +1240,7 @@ function copyDialog(title, keys) {
 function faqDialog(i) {
   const q = data.faq[i] || { question: '', answer: '' };
   formModal(
-    'Una pequeña respuesta.',
+    'Pregunta frecuente',
     'Ayudá a resolver las dudas antes de la visita.',
     (c) => {
       const question = field(c, 'Pregunta', q.question, { required: true, maxLength: 200 }),
@@ -1245,12 +1272,12 @@ function faqDialog(i) {
   );
 }
 function locationView() {
-  heading('NOS VEMOS EN EL ESTUDIO', 'Tu lugar.', 'La dirección que compartís con tus visitantes.');
+  heading('DÓNDE ENCONTRARNOS', 'Tu ubicación', 'La dirección que compartís con tus visitantes.');
   const card = el('section', undefined, 'location-preview');
   card.append(
-    el('span', '✳', 'location-flower'),
-    el('p', 'ACÁ PASA LA MAGIA', 'eyebrow'),
-    el('h2', data.location.address || 'Tu estudio, en el mapa.'),
+    icon('pin'),
+    el('p', 'EL ESTUDIO', 'eyebrow'),
+    el('h2', data.location.address || 'Agregá la dirección de tu estudio'),
     el(
       'span',
       data.location.confirmed ? 'Visible en tu página' : 'Todavía sin mostrar',
@@ -1262,7 +1289,7 @@ function locationView() {
     'Editar ubicación',
     () =>
       formModal(
-        'Dónde encontrarnos.',
+        'Ubicación del estudio',
         'Usá calle, número y ciudad para orientar a tus visitantes.',
         (c) => {
           const address = field(c, 'Dirección completa', data.location.address, {
@@ -1289,7 +1316,7 @@ function locationView() {
   editor.append(card);
 }
 function accessView() {
-  heading('SOLO PARA VOS', 'Tu espacio, cuidado.', 'Administrá el acceso y llevá Mora con vos.');
+  heading('MI MORA', 'Acceso al estudio', 'Administrá tu contraseña e instalá el panel.');
   const grid = el('div', undefined, 'settings-grid');
   const password = el('section', undefined, 'surface');
   password.append(
@@ -1302,7 +1329,7 @@ function accessView() {
     'Cambiar contraseña',
     () =>
       formModal(
-        'Un acceso solo tuyo.',
+        'Cambiar contraseña',
         'Elegí una contraseña de al menos 12 caracteres.',
         (c) => {
           const input = field(c, 'Nueva contraseña', '', {
@@ -1345,7 +1372,7 @@ function accessView() {
   const b = button(
     install,
     'Instalar Mi Mora',
-    () => document.dispatchEvent(new Event('mora:install')),
+    () => document.dispatchEvent(new Event('bere:install')),
     'primary',
   );
   b.classList.add('install-access');
@@ -1354,7 +1381,7 @@ function accessView() {
 }
 function clientsView() {
   heading(
-    'PERSONAS QUE VUELVEN',
+    'EL HISTORIAL DEL ESTUDIO',
     'Tus clientes.',
     'El historial reúne los turnos registrados con el mismo teléfono.',
   );
@@ -1483,7 +1510,7 @@ document.querySelectorAll('[data-tab],[data-route]').forEach((b) => {
 });
 $('more-nav').prepend(icon('menu'));
 $('more-nav').addEventListener('click', () =>
-  modal('Tu espacio Mora.', '¿A dónde vamos?', (c) => {
+  modal('Más secciones', 'Elegí la sección que querés abrir.', (c) => {
     const grid = el('nav', undefined, 'more-grid');
     grid.setAttribute('aria-label', 'Más secciones');
     Object.entries(sections).forEach(([key, title]) =>
@@ -1593,7 +1620,7 @@ function manualBookingDialog() {
           'manual-booking-note',
         ),
       );
-      const ready = () => c.closest('form')?.dispatchEvent(new Event('mora:ready'));
+      const ready = () => c.closest('form')?.dispatchEvent(new Event('bere:ready'));
       refreshSlots = async () => {
         const current = ++request;
         chosenStart = null;
@@ -1712,7 +1739,7 @@ function manualBookingDialog() {
           phone: phone.value,
         };
         const signature = JSON.stringify(payload);
-        if (!requestKeys.has(signature)) requestKeys.set(signature, crypto.randomUUID());
+        if (!requestKeys.has(signature)) requestKeys.set(signature, randomId());
         return { ...payload, requestKey: requestKeys.get(signature) };
       };
       read.canSubmit = () => !!chosenStart && !slotsLoading;
