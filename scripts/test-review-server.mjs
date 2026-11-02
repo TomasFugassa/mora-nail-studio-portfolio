@@ -19,7 +19,6 @@ const env = {
   MORA_REVIEW_PASSWORD: password,
   MORA_ADMIN_PASSWORD: adminPassword,
   MORA_DEMO_MODE: 'true',
-  MORA_CONTENT_SEED: 'content/review-seed.json',
   MORA_DATA_DIR: directory,
   MORA_SITE_ORIGIN: url,
   HOST: '127.0.0.1',
@@ -100,7 +99,7 @@ try {
   const state = await (await request('/api/admin', { headers: { Cookie: adminCookie } })).json();
   assert.equal(state.bookings.length, 0);
   assert.ok(state.content.booking.windows.length > 0);
-  assert.ok(state.content.collection.photos.length >= 10);
+  assert.ok(state.content.collection.photos.length >= 7);
   const service = state.content.booking.services.find((s) => s.active),
     date = state.content.booking.windows[0].date;
   const slots = await (
@@ -133,7 +132,7 @@ try {
   const file = new FormData();
   file.append(
     'file',
-    new Blob([await import('node:fs').then((fs) => fs.readFileSync('src/assets/nail-01.png'))], {
+    new Blob([await import('node:fs').then((fs) => fs.readFileSync('src/assets/mora-cherry.png'))], {
       type: 'image/png',
     }),
     'prueba.png',

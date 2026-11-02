@@ -17,8 +17,7 @@ const form = document.querySelector<HTMLFormElement>('#booking-form'),
 let selected: number | null = null,
   key = crypto.randomUUID(),
   loading = false,
-  requestVersion = 0,
-  sitePhone = '';
+  requestVersion = 0;
 const message = (text: string) => {
   if (status) status.textContent = text;
 };
