@@ -20,3 +20,6 @@ REVIEW-ACCESS.txt
 .mora-data/
 .mora-review-data/
 public/pwa/bere-*.png
+.netlify/
+.mora-netlify-workspace
+.mora-demo-access.txt

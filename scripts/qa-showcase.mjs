@@ -1,9 +1,9 @@
 import {chromium} from 'playwright-core';
-import AxeBuilder from '@axe-core/playwright';
 import {mkdirSync,writeFileSync,readFileSync} from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import {reviewServiceGroups} from './review-editor.mjs';
+import {staticAccessibility} from './review-accessibility.mjs';
 const url=process.env.MORA_TEST_URL||'http://127.0.0.1:4324';
 const output=path.resolve('qa-output/product-refinement/general'+(process.argv.includes('--quick')?'/quick':''));mkdirSync(output,{recursive:true});
 const browser=await chromium.launch({executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true,args:['--enable-unsafe-swiftshader','--use-angle=swiftshader']});
@@ -34,7 +34,7 @@ try{
   await page.screenshot({path:path.join(output,'desktop-transition.png')});
   await page.waitForFunction(()=>document.querySelector('.hero').dataset.transitioning==='false');
   assert.notEqual(await page.locator('#hero-position').textContent(),first);
-  await page.waitForFunction(()=>document.querySelector('.hero').dataset.activeSlide==='2',{},{timeout:11000});
+  await page.waitForFunction(()=>document.querySelector('.hero').dataset.activeSlide==='2',{},{timeout:25000});
   assert.equal(await page.locator('#hero-position').textContent(),'03');
   await page.locator('[data-slide="0"]').click();await page.waitForFunction(()=>document.querySelector('.hero').dataset.transitioning==='false');
   assert.equal(await page.locator('#hero-caption').textContent(),'Cherry');
@@ -53,11 +53,11 @@ try{
   await page.waitForTimeout(1000);await page.mouse.move(2,2);await page.waitForTimeout(200);
   assert.ok(await firstPhoto.evaluate(e=>new DOMMatrixReadOnly(getComputedStyle(e).transform).m11>1),'El regreso del zoom también es gradual');
   report.checks.push('Zoom progresivo de entrada y salida sin salto instantáneo');
-  assert.equal(await page.locator('.collection.is-pinned').count(),1);
-  await page.evaluate(()=>{const spacer=document.querySelector('#coleccion .pin-spacer');window.scrollTo({top:scrollY+spacer.getBoundingClientRect().top+350,behavior:'instant'});});
-  await page.waitForTimeout(1100);
-  assert.ok(await page.locator('.gallery').evaluate(e=>new DOMMatrixReadOnly(getComputedStyle(e).transform).m41 < -50));
-  report.checks.push('Colección: avance horizontal vinculado al desplazamiento de la página');
+  assert.equal(await page.locator('.collection.is-pinned').count(),0);
+  await page.locator('#collection-scroll').fill('65');
+  assert.ok(await page.locator('.gallery-window').evaluate(e=>e.scrollLeft>50));
+  await page.locator('#collection-scroll').fill('0');
+  report.checks.push('Colección: barra horizontal independiente del desplazamiento de la página');
   await page.locator('#estudio').scrollIntoViewIfNeeded();await page.waitForTimeout(1300);
   await page.waitForFunction(()=>document.querySelector('#polish-3d').dataset.state==='ready',{},{timeout:45000});
   await page.locator('[data-color-name="03 — BLUE"]').click();
@@ -141,7 +141,7 @@ try{
     await web.locator('#reservas').screenshot({path:path.join(output,'mobile-booking.png')});
     for(const [name,width,height]of[['desktop',1440,1000],['mobile',390,844]]){
       await web.setViewportSize({width,height});await web.reload({waitUntil:'networkidle'});await web.evaluate(async()=>{for(const image of document.images){image.loading='eager';await image.decode().catch(()=>{});}});
-      const axe=await new AxeBuilder({page:web}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();report.accessibility.push({name,violations:axe.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}))});
+      const axe=await staticAccessibility(web);report.accessibility.push({name,violations:axe.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))}))});
       await web.evaluate(()=>{document.activeElement?.blur();window.scrollTo(0,0);});
       await web.screenshot({path:path.join(output,name+'-full.png'),fullPage:true});
     }

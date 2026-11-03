@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';import {randomUUID} from 'node:crypto';import path from 'node:path';
 const closed=page=>page.waitForFunction(()=>!document.querySelector('#editor-dialog').open);
 const submit=async page=>{await page.getByRole('button',{name:'Guardar cambios',exact:true}).click();await closed(page)};
-async function publicPage(context,url,report){const page=await context.newPage();page.on('pageerror',error=>report.errors.push(error.message));await page.goto(url,{waitUntil:'networkidle'});return page;}
+async function publicPage(context,url,report){const page=await context.newPage();page.on('pageerror',error=>report.errors.push(error.message));page.on('response',response=>{if(response.status()>=400)report.resources?.push([response.status(),response.url()]);});await page.goto(url,{waitUntil:'networkidle'});await page.waitForFunction(()=>document.querySelector('.hero')?.dataset.transitioning==='false');return page;}
 export async function reviewServiceGroups({page,context,url,api,cookie,report,output}){
  await page.locator('[data-tab="services"]').click();const current=(await api('/api/admin',null,cookie)).data.content;const groupCount=current.studio.services.length;
  const name='Servicio editorial de prueba';await page.getByRole('button',{name:'Agregar servicio',exact:true}).click();await page.getByLabel('Nombre del servicio',{exact:true}).fill(name);await page.getByLabel('Duración en minutos',{exact:true}).fill('45');await submit(page);let content=(await api('/api/admin',null,cookie)).data.content;const service=content.booking.services.find(s=>s.name===name);assert.ok(service);

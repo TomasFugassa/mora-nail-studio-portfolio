@@ -744,7 +744,7 @@ function editPhoto(id) {
         icon('upload'),
         el('strong', original ? 'Cambiar fotografía' : 'Elegir una fotografía'),
         el('span', 'o arrastrala hasta acá'),
-        el('small', 'JPG, PNG o WebP · hasta 6 MB'),
+        el('small', 'JPG, PNG o WebP · hasta 3 MB'),
       );
       upload.append(label, file);
       c.append(upload);

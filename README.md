@@ -1,6 +1,12 @@
 # Mora Nail Studio
 
-Muestra de un estudio de uñas: colección, frasco 3D, servicios, reservas y panel de administración. Astro, TypeScript, GSAP, Three.js y SQLite. Las animaciones funcionan desde la dirección normal, sin parámetros adicionales.
+Muestra de un estudio de uñas: colección, frasco 3D, servicios, reservas y panel. Astro, TypeScript, GSAP y Three.js; SQLite local y Postgres en Netlify. Las animaciones funcionan desde la dirección normal.
+
+## Enlace para mostrar
+
+- Página: https://mora-nail-studio-tf.netlify.app/
+- Panel: https://mora-nail-studio-tf.netlify.app/admin
+- Contraseña: archivo privado `.mora-demo-access.txt`, excluido de Git.
 
 ## Abrir
 
@@ -25,4 +31,10 @@ Para verla desde el celular en el mismo router, abrí **VER-EN-CELULAR.cmd** o e
 - Los horarios son de prueba. WhatsApp prepara consultas al **095 983 487** sin enviarlas automáticamente.
 - Imágenes de uñas generadas para la muestra. Créditos de los fondos en `scripts/atmosphere-sources.json`.
 
-El repositorio guarda el código. No hay alojamiento ni despliegue automático configurado; estas direcciones solo funcionan en tu computadora o red local.
+## Publicar cambios
+
+Iniciá sesión y vinculá el proyecto con `npx netlify login` y `npx netlify link`; después `npm run publish:netlify`.
+
+- Netlify guarda la contraseña inicial y las variables `MORA_DATABASE_DRIVER=postgres`, `MORA_DEMO_MODE=true`, `MORA_DEMO_ROLLING=true` y `MORA_SITE_ORIGIN`.
+- Migraciones: `netlify/database/migrations/`. Prueba de Postgres: `npm run test:postgres`.
+- Free tiene un límite compartido de créditos; al agotarlo, la muestra se pausa. Recargas automáticas desactivadas. Sin Railway ni despliegues automáticos desde GitHub.

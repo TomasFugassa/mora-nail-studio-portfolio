@@ -3,12 +3,14 @@ import AxeBuilder from '@axe-core/playwright';
 import {readFileSync,mkdirSync,writeFileSync} from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
 import {reviewServiceGroups} from './review-editor.mjs';
 const url=process.env.MORA_TEST_URL||'http://127.0.0.1:4325';
 const quick=process.argv.includes('--quick');
 if(new URL(url).port!=='4325')throw Error('Esta revisión usa únicamente el servidor de pruebas 4325.');
 const output=path.resolve('qa-output/admin-mora'+(quick?'/quick':''));mkdirSync(output,{recursive:true});
 const report={checks:[],errors:[],resources:[],accessibility:[],viewports:[]};
+const clientName='Cliente QA Mora '+randomUUID().slice(0,6);
 const browser=await chromium.launch({executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true});
 const watch=page=>{page.on('pageerror',e=>report.errors.push(e.message));page.on('response',r=>{if(r.status()>=400&&!new URL(r.url()).pathname.startsWith('/api/admin'))report.resources.push([r.status(),r.url()]);});};
 const password=readFileSync('.local-admin-access.txt','utf8').match(/Contraseña inicial: ([^\r\n]+)/)[1];
@@ -31,7 +33,7 @@ try{
  assert.ok(!(await page.locator('body').innerText()).match(/belén|espacio de prueba|✳/i));
  await screenshot(page,'home.png');
  for(const tab of ['agenda','photos','services','hours','content','location','access','clients']){
-  await page.locator(`[data-tab="${tab}"]`).click();assert.equal(await page.locator('#admin-editor').getAttribute('data-view'),tab);await screenshot(page,tab+'.png');
+  await page.locator(`[data-tab="${tab}"]`).click();await page.waitForFunction(view=>document.querySelector('#admin-editor')?.dataset.view===view,tab);await screenshot(page,tab+'.png');
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),tab+' sin desborde');
  }
  report.checks.push('Acceso privado, contraseña visible/oculta, nueve pantallas con identidad Mora y sin referencias a Belén');
@@ -48,11 +50,11 @@ try{
   await page.locator('[data-tab="home"]').click();await page.getByRole('button',{name:'Agendar un turno',exact:true}).click();
   await page.locator('#manual-service').selectOption('softgel');await page.waitForFunction(()=>document.querySelector('#manual-date').options.length>1);
   const date=await page.locator('#manual-date option').nth(1).getAttribute('value');await page.locator('#manual-date').selectOption(date);await page.locator('#manual-slots button').first().click();
-  await page.getByLabel('Nombre del cliente',{exact:true}).fill('Cliente QA Mora');await page.getByLabel('Celular / WhatsApp',{exact:true}).fill('099123456');
+  await page.getByLabel('Nombre del cliente',{exact:true}).fill(clientName);await page.getByLabel('Celular / WhatsApp',{exact:true}).fill('099123456');
   await screenshot(page,'manual-booking.png');await dialog(page).getByRole('button',{name:'Agendar turno',exact:true}).click();await closed(page);
-  const booking=(await api('/api/admin')).data.bookings.find(b=>b.name==='Cliente QA Mora'&&b.status==='confirmed');assert.ok(booking);
+  const booking=(await api('/api/admin')).data.bookings.find(b=>b.name===clientName&&b.status==='confirmed');assert.ok(booking);
   const available=(await api('/api/availability?service=softgel&date='+date)).data.slots;assert.ok(!available.some(s=>s.start<booking.end&&s.start+60*60000>booking.start));
-  await page.locator('.booking-row').filter({hasText:'Cliente QA Mora'}).click();await screenshot(page,'booking-detail.png');await dialog(page).getByRole('button',{name:'Cancelar turno',exact:true}).click();await dialog(page).getByRole('button',{name:'Liberar horario',exact:true}).click();await closed(page);
+  await page.locator('.booking-row').filter({hasText:clientName}).click();await screenshot(page,'booking-detail.png');await dialog(page).getByRole('button',{name:'Cancelar turno',exact:true}).click();await dialog(page).getByRole('button',{name:'Liberar horario',exact:true}).click();await closed(page);
   assert.equal((await api('/api/admin')).data.bookings.find(b=>b.id===booking.id).status,'cancelled');
   report.checks.push('Agendar desde Inicio, duración y exclusión de cruces, detalle y cancelación del turno');
   await page.locator('[data-tab="photos"]').click();await page.getByRole('button',{name:'Agregar diseño',exact:true}).click();

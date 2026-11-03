@@ -7,24 +7,29 @@
     "dev": "node --env-file-if-exists=.env node_modules/astro/bin/astro.mjs dev --host 127.0.0.1 --port 4324",
     "dev:lan": "node --env-file-if-exists=.env scripts/dev-lan.mjs",
     "build": "astro build",
+    "build:netlify": "node scripts/build-netlify.mjs",
+    "publish:netlify": "node scripts/publish-netlify.mjs",
     "preview": "astro preview --host 127.0.0.1 --port 4324",
     "check": "astro check",
     "qa": "node scripts/qa-showcase.mjs",
     "start": "node --env-file-if-exists=.env dist/server/entry.mjs",
     "backup": "node --env-file-if-exists=.env scripts/backup.mjs",
     "test:booking": "node scripts/test-booking.mjs",
+    "test:postgres": "node scripts/test-postgres.mjs",
     "start:review": "node --env-file-if-exists=.env scripts/review-server.mjs"
   },
   "engines": {
     "node": ">=22.12.0"
   },
   "dependencies": {
+    "@astrojs/netlify": "^8.2.11",
     "@astrojs/node": "11.1.9",
     "@fontsource/archivo": "5.3.0",
     "@fontsource/bodoni-moda": "5.3.0",
     "@fontsource/bricolage-grotesque": "^5.3.0",
     "@fontsource/instrument-sans": "^5.3.0",
     "@fontsource/mrs-saint-delafield": "^5.3.0",
+    "@netlify/database": "^2.0.1",
     "astro": "7.3.8",
     "gsap": "^3.15.0",
     "sharp": "0.35.5",
@@ -33,8 +38,10 @@
   "devDependencies": {
     "@astrojs/check": "0.9.10",
     "@axe-core/playwright": "4.13.0",
+    "@netlify/database-dev": "^1.0.1",
     "@types/node": "22.20.5",
     "@types/three": "^0.180.0",
+    "netlify-cli": "^27.16.2",
     "playwright-core": "1.64.0",
     "typescript": "6.0.3"
   },

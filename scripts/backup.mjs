@@ -1,7 +1,8 @@
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync, chmodSync } from 'node:fs';
 import path from 'node:path';
-const directory = path.resolve(process.env.BERE_DATA_DIR || '.bere-data');
+if(process.env.MORA_DATABASE_DRIVER==='postgres'||process.env.NETLIFY==='true')throw Error('Este comando es para SQLite local. La copia de Postgres se gestiona desde Netlify Database.');
+const directory = path.resolve(process.env.MORA_DATA_DIR || process.env.BERE_DATA_DIR || '.bere-data');
 mkdirSync(path.join(directory, 'backups'), { recursive: true });
 const filename = path.join(
   directory,

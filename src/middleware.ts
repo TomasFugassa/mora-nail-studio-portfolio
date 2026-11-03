@@ -9,7 +9,7 @@ export const onRequest = defineMiddleware(async (_context, next) => {
   if (!import.meta.env.DEV)
     response.headers.set(
       'Content-Security-Policy',
-      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; frame-src https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
     );
   if (!response.headers.has('Cache-Control')) response.headers.set('Cache-Control', 'no-store');
   return response;

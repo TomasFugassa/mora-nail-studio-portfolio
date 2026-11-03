@@ -1,0 +1,57 @@
+import {chromium} from 'playwright-core';
+import {readFileSync,mkdirSync,writeFileSync} from 'node:fs';
+import {randomUUID} from 'node:crypto';
+import assert from 'node:assert/strict';
+const url='http://127.0.0.1:4325';
+const output='qa-output/management';mkdirSync(output,{recursive:true});
+const password=readFileSync('.local-admin-access.txt','utf8').match(/Contraseña inicial: ([^\r\n]+)/)[1];
+const browser=await chromium.launch({executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true});
+const context=await browser.newContext({viewport:{width:1440,height:1000}});
+const report={checks:[],errors:[]};
+const page=await context.newPage();page.on('pageerror',e=>report.errors.push(e.message));
+const call=async(input)=>{const r=await context.request.post(url+'/api/admin',{headers:{Origin:url},data:input});return {status:r.status(),data:await r.json()};};
+const content=async()=> (await (await context.request.get(url+'/api/admin')).json()).content;
+const closed=()=>page.waitForFunction(()=>!document.querySelector('#editor-dialog').open);
+const save=async()=>{await page.getByRole('button',{name:'Guardar cambios',exact:true}).click();await closed();};
+const tab=async(name)=>{await page.locator(`[data-tab="${name}"]`).click();await page.waitForFunction(v=>document.querySelector('#admin-editor')?.dataset.view===v,name);};
+let snapshot,changedPassword=false;
+try{
+ await page.goto(url+'/admin',{waitUntil:'networkidle'});
+ await page.locator('#admin-password').fill(password);await page.locator('#login-form button[type=submit]').click();await page.locator('#admin-workspace').waitFor({state:'visible'});
+ snapshot=structuredClone(await content());
+ await tab('hours');await page.getByRole('button',{name:'Agregar horario',exact:true}).click();
+ const date=new Date(Date.now()+20*86400000).toISOString().slice(0,10);
+ await page.getByLabel('Día',{exact:true}).fill(date);await page.getByLabel('Desde',{exact:true}).fill('10:00');await page.getByLabel('Hasta',{exact:true}).fill('09:00');
+ await page.getByRole('button',{name:'Guardar cambios',exact:true}).click();await page.locator('.inline-error').waitFor({state:'visible'});
+ await page.getByLabel('Hasta',{exact:true}).fill('13:00');await save();
+ let current=await content();let window=current.booking.windows.find(w=>w.date===date);assert.ok(window);
+ let available=await (await context.request.get(url+`/api/availability?service=softgel&date=${date}`)).json();assert.equal(available.slots[0].time,'10:00');assert.equal(available.slots.at(-1).time,'11:45');
+ await page.locator('.hours-row').filter({hasText:'10:00 — 13:00'}).getByRole('button',{name:'Editar horario'}).click();await page.getByLabel('Desde',{exact:true}).fill('11:00');await save();
+ available=await (await context.request.get(url+`/api/availability?service=softgel&date=${date}`)).json();assert.equal(available.slots[0].time,'11:00');
+ await page.locator('.hours-row').filter({hasText:'11:00 — 13:00'}).getByRole('button',{name:'Editar horario'}).click();await page.getByRole('button',{name:'Retirar esta franja',exact:true}).click();await page.getByRole('button',{name:'Retirar franja',exact:true}).click();await closed();assert.ok(!(await content()).booking.windows.some(w=>w.id===window.id));
+ report.checks.push('Horarios: validación de franja invertida, alta, edición, eliminación y disponibilidad según duración y descanso');
+ await page.getByRole('button',{name:'Configurar reservas',exact:true}).click();await page.getByLabel('Recibir reservas online',{exact:true}).uncheck();await page.getByLabel('Anticipación mínima (minutos)',{exact:true}).fill('0');await page.getByLabel('Descanso entre turnos (minutos)',{exact:true}).fill('5');await page.getByRole('checkbox',{name:/Limitar cuántos días antes pueden reservar/}).uncheck();await save();
+ current=await content();assert.equal(current.booking.maxAdvanceDays,0);assert.equal(current.booking.bufferMinutes,5);assert.equal(current.booking.minLeadMinutes,0);assert.equal(current.booking.enabled,false);
+ const paused=await (await context.request.get(url+'/api/availability')).json();assert.equal(paused.enabled,false);
+ const adminSlots=await (await context.request.get(url+`/api/admin?view=availability&service=softgel&date=${snapshot.booking.windows[0].date}`)).json();assert.ok(adminSlots.slots.length);
+ assert.equal((await call({action:'save',content:{...current,booking:snapshot.booking}})).status,200);await page.reload({waitUntil:'networkidle'});await page.locator('#admin-workspace').waitFor({state:'visible'});
+ report.checks.push('Configuración: pausar reservas públicas, conservar agenda interna y guardar anticipación, descanso y límite opcional');
+ await tab('photos');const newHero=snapshot.collection.photos[1];await page.locator('.photo-card').filter({hasText:newHero.title}).locator('.photo-edit').click();await page.locator('#editor-dialog details summary').click();await page.getByLabel('Usar como portada principal',{exact:true}).check();await page.locator('#editor-dialog button[type=submit]').click();await closed();assert.equal((await content()).collection.heroId,newHero.id);
+ const web=await context.newPage();web.on('pageerror',e=>report.errors.push(e.message));await web.goto(url,{waitUntil:'networkidle'});await web.waitForFunction(()=>document.querySelector('.hero')?.dataset.transitioning==='false');assert.equal(await web.locator('#hero-caption').textContent(),newHero.title);
+ await page.locator('.photo-card').filter({hasText:newHero.title}).locator('.photo-edit').click();await page.locator('#editor-dialog details summary').click();await page.getByRole('button',{name:'Eliminar diseño',exact:true}).click();await page.getByRole('button',{name:'Eliminar diseño',exact:true}).click();await closed();current=await content();assert.ok(!current.collection.photos.some(p=>p.id===newHero.id));assert.equal(current.collection.heroId,current.collection.photos[0].id);
+ await web.reload({waitUntil:'networkidle'});await web.waitForFunction(()=>document.querySelector('.hero')?.dataset.transitioning==='false');assert.equal(await web.locator('#hero-caption').textContent(),current.collection.photos[0].title);
+ report.checks.push('Colección: cambio de portada, eliminación y sustitución automática de la portada retirada');
+ await tab('location');await page.getByRole('button',{name:'Editar ubicación',exact:true}).click();await page.getByLabel('Dirección completa',{exact:true}).fill('18 de Julio 1200, Montevideo, Uruguay');await page.getByLabel('Mostrar esta dirección',{exact:true}).check();await save();await web.reload({waitUntil:'networkidle'});assert.ok((await web.locator('body').innerText()).includes('18 de Julio 1200'));assert.ok((await web.locator('#load-map').getAttribute('data-map-src')).includes('18%20de%20Julio'));
+ await page.getByRole('button',{name:'Editar ubicación',exact:true}).click();await page.getByLabel('Mostrar esta dirección',{exact:true}).uncheck();await save();await web.reload({waitUntil:'networkidle'});assert.ok(!(await web.locator('body').innerText()).includes('18 de Julio 1200'));
+ report.checks.push('Ubicación: dirección y mapa visibles al habilitarla y ocultos al desactivarla');
+ const invalid=await context.request.post(url+'/api/upload',{headers:{Origin:url},multipart:{file:{name:'invalida.png',mimeType:'image/png',buffer:Buffer.from('not an image')}}});assert.equal(invalid.status(),400);
+ const anonymous=await browser.newContext();assert.equal((await anonymous.request.post(url+'/api/upload',{headers:{Origin:url},multipart:{file:{name:'imagen.png',mimeType:'image/png',buffer:Buffer.from('invalid')}}})).status(),401);await anonymous.close();
+ assert.equal((await context.request.post(url+'/api/admin',{headers:{Origin:'https://example.invalid'},data:{action:'save',content:await content()}})).status(),403);
+ report.checks.push('Protecciones: imagen inválida rechazada, subida privada y cambios desde otro origen bloqueados');
+ await tab('access');await page.getByRole('button',{name:'Cambiar contraseña',exact:true}).click();const next='Mora-'+randomUUID();await page.getByLabel('Nueva contraseña',{exact:true}).fill(next);await page.getByLabel('Repetí la contraseña',{exact:true}).fill('no coincide');await page.getByRole('button',{name:'Cambiar y cerrar sesiones',exact:true}).click();await page.locator('.inline-error').filter({hasText:'no coinciden'}).waitFor();await page.getByLabel('Repetí la contraseña',{exact:true}).fill(next);await page.getByRole('button',{name:'Cambiar y cerrar sesiones',exact:true}).click();await page.locator('#admin-login').waitFor({state:'visible'});changedPassword=true;assert.equal((await context.request.get(url+'/api/admin')).status(),401);assert.equal((await call({action:'login',password})).status,401);assert.equal((await call({action:'login',password:next})).status,200);assert.equal((await call({action:'password',password})).status,200);changedPassword=false;assert.equal((await call({action:'login',password})).status,200);
+ report.checks.push('Contraseña: validación de repetición, cambio, cierre de sesiones y acceso con la nueva clave');
+ await web.close();assert.deepEqual(report.errors,[]);
+}catch(error){report.failure=error.stack;throw error;}finally{
+ if(snapshot&&!changedPassword){const latest=await content();await call({action:'save',content:{...snapshot,version:latest.version}});}
+ await browser.close();writeFileSync(output+'/report.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report));
+}
